@@ -139,9 +139,9 @@ struct TodayView: View {
                         title: "今天还没有新的记录",
                         reply: "依安：等你想说的时候，我会在这里。")
             } else {
-                ForEach(Array(seenItems.enumerated()), id: \.element.id) { index, item in
+                ForEach(Array(seenItems.prefix(2).enumerated()), id: \.element.id) { index, item in
                     SeenRow(time: item.time, title: item.title, reply: item.reply)
-                    if index < seenItems.count - 1 {
+                    if index < min(seenItems.count, 2) - 1 {
                         Divider().background(Color.gHairline)
                     }
                 }
