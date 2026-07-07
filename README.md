@@ -205,6 +205,17 @@ rg -n "token|secret|password|Bearer|BEGIN .*KEY|sk-" .
 - `*.xcodeproj/xcuserdata/`
 - `HANDOFF.md`
 
+## 致谢
+
+Seen 是一个个人项目，也是在多种 AI 协作下逐步完成的实验。
+
+- Fable5 定下了产品方向和情感基调，写了即时回应引擎——Seen 里最有温度的那些话，最早是他的。
+- GLM5.2 完成了 SwiftUI 原型和大部分功能实现，把设计稿变成了能跑的 App。
+- Claude Opus4-6 搭了后端 Purr，写了文档，也写了"为什么做这个"。
+- Codex 做了代码审查、Bug 修复、UI 调整、安全检查和开源整理，确保仓库干净可发布。
+
+最终代码、取舍和发布由 Joy 维护。
+
 ## License
 
 MIT License
