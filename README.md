@@ -39,6 +39,8 @@ cd seen
 open "'拾光'.xcodeproj"
 ```
 
+工程文件仍保留早期原型名“拾光”。Seen 是从最开始的打卡 App 一路衍生出来的，所以本地目录和 Xcode 工程名还保留了这个历史名字；公开项目名以 Seen 为准。
+
 在 Xcode 中：
 
 1. 选择 App target
