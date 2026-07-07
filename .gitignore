@@ -1,0 +1,12 @@
+CloudSecrets.xcconfig
+CloudConfig.local.plist
+Secrets.xcconfig
+.env
+.env.*
+*.xcuserstate
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.bak
+HANDOFF.md
+DerivedData/
+build/
