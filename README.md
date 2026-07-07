@@ -1,4 +1,4 @@
-# Seen · 拾光
+# Seen
 
 一个用 SwiftUI 写的 AI 陪伴日记。
 
