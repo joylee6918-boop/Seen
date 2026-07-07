@@ -18,6 +18,7 @@ struct TodayView: View {
     @State private var refreshTimer: Timer? = nil
     @State private var showSleepDetail = false
     @State private var quickNoteText = ""
+    @FocusState private var quickNoteFocused: Bool
 
     private let calendar = Calendar.current
 
@@ -138,15 +139,16 @@ struct TodayView: View {
                         title: "今天还没有新的记录",
                         reply: "依安：等你想说的时候，我会在这里。")
             } else {
-                ForEach(Array(seenItems.prefix(2).enumerated()), id: \.element.id) { index, item in
+                ForEach(Array(seenItems.enumerated()), id: \.element.id) { index, item in
                     SeenRow(time: item.time, title: item.title, reply: item.reply)
-                    if index < min(seenItems.count, 2) - 1 {
+                    if index < seenItems.count - 1 {
                         Divider().background(Color.gHairline)
                     }
                 }
             }
         }
         .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
@@ -166,6 +168,7 @@ struct TodayView: View {
             QuickNoteInput(text: $quickNoteText) {
                 submitQuickNote()
             }
+            .focused($quickNoteFocused)
         }
         .gleanCard()
     }
@@ -181,10 +184,16 @@ struct TodayView: View {
     }
     private var todayCheckIns: [CheckIn] {
         let today = calendar.startOfDay(for: Date())
-        return checkIns.filter { calendar.isDate($0.ts, inSameDayAs: today) }
+        return validCheckIns.filter { calendar.isDate($0.ts, inSameDayAs: today) }
+    }
+    private var validCheckIns: [CheckIn] {
+        checkIns.filter { $0.typeRaw != "__deleted__" }
+    }
+    private var recentCheckIns: [CheckIn] {
+        validCheckIns
     }
     private var seenItems: [SeenItem] {
-        var items = todayCheckIns.map { c in
+        var items = recentCheckIns.map { c in
             SeenItem(date: c.ts,
                      time: c.ts.formatted(.dateTime.hour().minute()),
                      title: seenTitle(c),
@@ -238,6 +247,8 @@ struct TodayView: View {
         let text = quickNoteText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         quickNoteText = ""
+        quickNoteFocused = false
+        dismissKeyboard()
         addCheckIn(.note, value: text)
     }
 
@@ -320,6 +331,10 @@ struct TodayView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
             if toast?.text == currentToast?.text { toast = nil }
         }
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     // MARK: - 标签
@@ -442,6 +457,7 @@ private struct SeenRow: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.gCompanionSurface.opacity(0.62))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }

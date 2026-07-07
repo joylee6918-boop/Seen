@@ -24,7 +24,7 @@ struct AIView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         tonightNoteCard
-                        todayRepliesSection
+                        repliesSection
                         Spacer(minLength: 100)
                     }
                     .padding(.horizontal, 20)
@@ -74,14 +74,16 @@ struct AIView: View {
         .shadow(color: Color.gTextPrimary.opacity(0.03), radius: 8, x: 0, y: 3)
     }
 
-    private var todayRepliesSection: some View {
-        ReplySection(title: "今天收到的回信", messages: todayMessages)
+    private var repliesSection: some View {
+        ReplySection(title: "最近收到的回信", messages: replyMessages)
     }
 
-    private var todayMessages: [MessageData] {
-        messageStore.history.filter { msg in
-            guard let date = parsedDate(msg.createdAt) else { return false }
-            return calendar.isDateInToday(date)
+    private var replyMessages: [MessageData] {
+        messageStore.history.sorted { lhs, rhs in
+            if let l = parsedDate(lhs.createdAt), let r = parsedDate(rhs.createdAt) {
+                return l > r
+            }
+            return lhs.id > rhs.id
         }
     }
 
@@ -113,7 +115,7 @@ struct AIView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gHairline, lineWidth: 1))
                 } else {
-                    ForEach(messages.prefix(8)) { msg in
+                    ForEach(messages) { msg in
                         ReplyCard(msg: msg)
                     }
                 }
