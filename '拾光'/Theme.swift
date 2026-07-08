@@ -43,9 +43,24 @@ extension Color {
     // 心率 · 红
     static let dHeartBg  = Color(red: 0xFF/255, green: 0xEA/255, blue: 0xEA/255)
     static let dHeart    = Color(red: 0xF5/255, green: 0x4D/255, blue: 0x58/255)
+    // 血氧 · 青蓝
+    static let dOxygenBg  = Color(red: 0xE8/255, green: 0xF8/255, blue: 0xFF/255)
+    static let dOxygen    = Color(red: 0x43/255, green: 0xA7/255, blue: 0xE8/255)
+    // 体温 · 蜜桃
+    static let dTempBg    = Color(red: 0xFF/255, green: 0xEF/255, blue: 0xE7/255)
+    static let dTemp      = Color(red: 0xF0/255, green: 0x8A/255, blue: 0x5B/255)
+    // 摄氧量 · 紫
+    static let dVo2Bg     = Color(red: 0xF0/255, green: 0xEC/255, blue: 0xFF/255)
+    static let dVo2       = Color(red: 0x86/255, green: 0x65/255, blue: 0xFF/255)
+    // 睡眠心率 · 粉红
+    static let dSleepHeartBg = Color(red: 0xFF/255, green: 0xEA/255, blue: 0xF3/255)
+    static let dSleepHeart   = Color(red: 0xF0/255, green: 0x67/255, blue: 0x9A/255)
     // 运动 · 绿
     static let dMoveBg   = Color(red: 0xE6/255, green: 0xFA/255, blue: 0xEF/255)
     static let dMove     = Color(red: 0x25/255, green: 0xD0/255, blue: 0x66/255)
+    // 能量 · 珊瑚红
+    static let dEnergyBg = Color(red: 0xFF/255, green: 0xEE/255, blue: 0xEA/255)
+    static let dEnergy   = Color(red: 0xF0/255, green: 0x5B/255, blue: 0x50/255)
     // 习惯 · 黄
     static let dHabitBg  = Color(red: 0xFF/255, green: 0xF8/255, blue: 0xDD/255)
     static let dHabit    = gWarmApricot
@@ -72,7 +87,7 @@ extension Color {
 
 // MARK: - 数据类型 → 语义色 映射
 enum DataType {
-    case mood, sleep, hrv, heart, move, energy, floors, oxygen, sound, habit, idea, ai, period
+    case mood, sleep, hrv, heart, move, energy, floors, oxygen, temperature, vo2, sleepHeart, sound, habit, idea, ai, period
 
     var main: Color {
         switch self {
@@ -81,9 +96,12 @@ enum DataType {
         case .hrv:     return .dHrv
         case .heart:   return .dHeart
         case .move:    return .dMove
-        case .energy:  return .dMove
+        case .energy:  return .dEnergy
         case .floors:  return .dMove
-        case .oxygen:  return .dHrv
+        case .oxygen:  return .dOxygen
+        case .temperature: return .dTemp
+        case .vo2:     return .dVo2
+        case .sleepHeart: return .dSleepHeart
         case .sound:   return .dSound
         case .habit:   return .dHabit
         case .idea:    return .dIdea
@@ -98,9 +116,12 @@ enum DataType {
         case .hrv:     return .dHrvBg
         case .heart:   return .dHeartBg
         case .move:    return .dMoveBg
-        case .energy:  return .dMoveBg
+        case .energy:  return .dEnergyBg
         case .floors:  return .dMoveBg
-        case .oxygen:  return .dHrvBg
+        case .oxygen:  return .dOxygenBg
+        case .temperature: return .dTempBg
+        case .vo2:     return .dVo2Bg
+        case .sleepHeart: return .dSleepHeartBg
         case .sound:   return .dSoundBg
         case .habit:   return .dHabitBg
         case .idea:    return .dIdeaBg
@@ -119,6 +140,9 @@ enum DataType {
         case .energy:  return "flame"
         case .floors:  return "stairs"
         case .oxygen:  return "lungs"
+        case .temperature: return "thermometer.medium"
+        case .vo2:     return "waveform.path.ecg"
+        case .sleepHeart: return "bed.double.fill"
         case .sound:   return "speaker.wave.2"
         case .habit:   return "checkmark.circle"
         case .idea:    return "lightbulb"
@@ -136,6 +160,9 @@ enum DataType {
         case .energy:  return "活动"
         case .floors:  return "楼层"
         case .oxygen:  return "血氧"
+        case .temperature: return "体温"
+        case .vo2:     return "摄氧量"
+        case .sleepHeart: return "睡眠心率"
         case .sound:   return "分贝"
         case .habit:   return "习惯"
         case .idea:    return "灵感"

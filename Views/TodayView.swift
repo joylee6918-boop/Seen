@@ -9,6 +9,7 @@ struct TodayView: View {
     @Query(sort: \DailyMood.date, order: .reverse) private var moods: [DailyMood]
     @Query(sort: \CheckIn.ts, order: .reverse) private var checkIns: [CheckIn]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var workouts: [WorkoutSession]
+    @Query(sort: \Inspiration.createdAt, order: .reverse) private var inspirations: [Inspiration]
     @EnvironmentObject var healthManager: HealthManager
     @EnvironmentObject var messageStore: MessageStore
     @Environment(\.scenePhase) private var scenePhase
@@ -138,44 +139,53 @@ struct TodayView: View {
 
     // MARK: - 健康数据核对
     private var healthDataOverview: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("健康数据")
-                    .font(.gH3)
-                    .foregroundColor(.gTextPrimary)
-                Spacer()
-                Text(healthSnapshot.lastUpdated.map { "更新 \(formatClock($0))" } ?? "正在读取")
-                    .font(.gCaption)
-                    .foregroundColor(.gTextSecondary)
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                GrowSectionHeader(
+                    title: "身体",
+                    trailing: healthSnapshot.lastUpdated.map { "更新 \(formatClock($0))" } ?? "正在读取"
+                )
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                    HealthMetricTile(type: .sleep,
+                                     title: "睡眠",
+                                     value: healthSnapshot.sleepHours.map { String(format: "%.1f h", $0) } ?? "未戴表",
+                                     detail: healthSnapshot.sleepHours == nil ? "Apple Watch 无睡眠样本" : sleepCardSub)
+                    HealthMetricTile(type: .heart,
+                                     title: "静息心率",
+                                     value: healthSnapshot.heartRate.map { "\(Int($0)) bpm" } ?? "无数据",
+                                     detail: "HealthKit 今日平均")
+                }
             }
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                HealthMetricTile(type: .sleep,
-                                 title: "睡眠",
-                                 value: healthSnapshot.sleepHours.map { String(format: "%.1f h", $0) } ?? "未戴表",
-                                 detail: healthSnapshot.sleepHours == nil ? "Apple Watch 无睡眠样本" : sleepCardSub)
-                HealthMetricTile(type: .move,
-                                 title: "步数",
-                                 value: healthSnapshot.steps.map { $0.formatted(.number.precision(.fractionLength(0))) } ?? "0",
-                                 detail: "今日累计")
-                HealthMetricTile(type: .energy,
-                                 title: "运动圆环",
-                                 value: activityRingValue,
-                                 detail: "活动 / 锻炼 / 站立")
-                HealthMetricTile(type: .energy,
-                                 title: "消耗卡路里",
-                                 value: healthSnapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "无数据",
-                                 detail: "今日累计")
-                HealthMetricTile(type: .heart,
-                                 title: "最新心率",
-                                 value: healthSnapshot.latestHeartRate.map { "\(Int($0)) bpm" } ?? "无数据",
-                                 detail: "近 24 小时最新样本")
-                HealthMetricTile(type: .heart,
-                                 title: "静息心率",
-                                 value: healthSnapshot.heartRate.map { "\(Int($0)) bpm" } ?? "无数据",
-                                 detail: "HealthKit 今日平均")
+            VStack(alignment: .leading, spacing: 12) {
+                GrowSectionHeader(title: "日常", trailing: nil)
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                    HealthMetricTile(type: .move,
+                                     title: "步数",
+                                     value: healthSnapshot.steps.map { $0.formatted(.number.precision(.fractionLength(0))) } ?? "0",
+                                     detail: "今日累计")
+                    HealthMetricTile(type: .energy,
+                                     title: "消耗卡路里",
+                                     value: healthSnapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "无数据",
+                                     detail: "今日累计")
+                    HealthMetricTile(type: .hrv,
+                                     title: "HRV",
+                                     value: healthSnapshot.hrv.map { "\(Int($0)) ms" } ?? "无数据",
+                                     detail: "恢复参考")
+                    HealthMetricTile(type: .heart,
+                                     title: "最新心率",
+                                     value: healthSnapshot.latestHeartRate.map { "\(Int($0)) bpm" } ?? "无数据",
+                                     detail: "近 24 小时最新样本")
+                    HealthMetricTile(type: .move,
+                                     title: "运动圆环",
+                                     value: activityRingValue,
+                                     detail: "活动 / 锻炼 / 站立")
+                    HealthMetricTile(type: .idea,
+                                     title: "今日灵感",
+                                     value: "\(todayInspirationCount)",
+                                     detail: "洞悉记录")
+                }
             }
         }
-        .gleanCard()
     }
 
     // MARK: - 刚刚看见
@@ -235,6 +245,10 @@ struct TodayView: View {
     private var todayWorkout: WorkoutSession? {
         let today = calendar.startOfDay(for: Date())
         return workouts.first { calendar.isDate($0.date, inSameDayAs: today) }
+    }
+    private var todayInspirationCount: Int {
+        let today = calendar.startOfDay(for: Date())
+        return inspirations.filter { calendar.isDate($0.createdAt, inSameDayAs: today) }.count
     }
     private var todayCheckIns: [CheckIn] {
         let today = calendar.startOfDay(for: Date())
@@ -509,6 +523,26 @@ private struct NoteChip: View {
     }
 }
 
+private struct GrowSectionHeader: View {
+    let title: String
+    let trailing: String?
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundColor(.gTextPrimary)
+            Spacer()
+            if let trailing {
+                Text(trailing)
+                    .font(.gBody)
+                    .foregroundColor(.gTextSecondary)
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+}
+
 private struct HealthMetricTile: View {
     let type: DataType
     let title: String
@@ -530,7 +564,7 @@ private struct HealthMetricTile: View {
                     .lineLimit(1)
             }
             Text(value)
-                .font(.system(size: 19, weight: .semibold))
+                .font(.system(size: 25, weight: .semibold))
                 .foregroundColor(.gTextPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
@@ -539,12 +573,41 @@ private struct HealthMetricTile: View {
                 .foregroundColor(.gTextWeak)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
+            Spacer(minLength: 0)
+            MiniTileBars(color: type.main)
+                .frame(height: 22)
+                .opacity(0.75)
         }
-        .frame(maxWidth: .infinity, minHeight: 94, alignment: .leading)
-        .padding(12)
-        .background(type.bg.opacity(0.82))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
+        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .padding(16)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+    }
+}
+
+private struct MiniTileBars: View {
+    let color: Color
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 4) {
+            ForEach([0.22, 0.48, 0.82, 0.58, 0.72, 0.38], id: \.self) { ratio in
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(color)
+                    .frame(width: 5, height: 22 * ratio)
+            }
+            Spacer(minLength: 0)
+            Circle()
+                .fill(color.opacity(0.35))
+                .frame(width: 5, height: 5)
+            Circle()
+                .fill(color.opacity(0.25))
+                .frame(width: 5, height: 5)
+            Circle()
+                .fill(color.opacity(0.18))
+                .frame(width: 5, height: 5)
+        }
     }
 }
 
