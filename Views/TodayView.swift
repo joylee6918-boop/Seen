@@ -9,7 +9,6 @@ struct TodayView: View {
     @Query(sort: \DailyMood.date, order: .reverse) private var moods: [DailyMood]
     @Query(sort: \CheckIn.ts, order: .reverse) private var checkIns: [CheckIn]
     @Query(sort: \WorkoutSession.date, order: .reverse) private var workouts: [WorkoutSession]
-    @Query(sort: \Inspiration.createdAt, order: .reverse) private var inspirations: [Inspiration]
     @EnvironmentObject var healthManager: HealthManager
     @EnvironmentObject var messageStore: MessageStore
     @Environment(\.scenePhase) private var scenePhase
@@ -32,6 +31,7 @@ struct TodayView: View {
                         header
                         tonightNote
                         healthDataOverview
+                        mealCheckIn
                         recentlySeen
                         quickCheckIn
                         Spacer(minLength: 100)
@@ -92,7 +92,7 @@ struct TodayView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("依安看过了")
                             .font(.gCaption)
-                            .foregroundColor(.gTextSecondary)
+                            .foregroundColor(.gTextBody)
                         Text("今晚先别硬撑")
                             .font(.system(size: 28, weight: .semibold))
                             .foregroundColor(.gTextPrimary)
@@ -121,19 +121,18 @@ struct TodayView: View {
                 NoteChip(
                     text: healthSnapshot.hrv.map { "HRV \(Int($0))ms" } ?? "HRV --",
                     foreground: .dHrv,
-                    background: .gWarmApricotBg
+                    background: .dHrvBg
                 )
                 NoteChip(
                     text: todayMood.map { "心情 \($0.moodScore)/10" } ?? "心情 --",
                     foreground: .dMood,
-                    background: .gSelectedBg
+                    background: .dMoodBg
                 )
             }
         }
         .padding(18)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.gHairline, lineWidth: 1))
         .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
     }
 
@@ -167,10 +166,6 @@ struct TodayView: View {
                                      title: "消耗卡路里",
                                      value: healthSnapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "无数据",
                                      detail: "今日累计")
-                    HealthMetricTile(type: .hrv,
-                                     title: "HRV",
-                                     value: healthSnapshot.hrv.map { "\(Int($0)) ms" } ?? "无数据",
-                                     detail: "恢复参考")
                     HealthMetricTile(type: .heart,
                                      title: "最新心率",
                                      value: healthSnapshot.latestHeartRate.map { "\(Int($0)) bpm" } ?? "无数据",
@@ -178,11 +173,33 @@ struct TodayView: View {
                     ActivityRingMetricTile(kcal: healthSnapshot.activeKcal,
                                            exerciseMinutes: healthSnapshot.exerciseMinutes,
                                            standHours: healthSnapshot.standHours)
-                    HealthMetricTile(type: .idea,
-                                     title: "今日灵感",
-                                     value: "\(todayInspirationCount)",
-                                     detail: "洞悉记录")
+                    ActivityActionTile(type: .coffee,
+                                       title: "咖啡",
+                                       value: todayCoffeeCount == 0 ? "未记录" : "\(todayCoffeeCount) 杯",
+                                       detail: "今天咖啡打卡") {
+                        addCheckIn(.coffee)
+                    }
+                    ActivityActionTile(type: .sleep,
+                                       title: "我去睡了",
+                                       value: hasGoodnight ? "已记录" : "未记录",
+                                       detail: "今晚收尾打卡",
+                                       done: hasGoodnight) {
+                        addCheckIn(.goodnight)
+                    }
                 }
+            }
+        }
+    }
+
+    // MARK: - 饮食打卡
+    private var mealCheckIn: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            GrowSectionHeader(title: "吃饭", trailing: nil)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                MealCheckButton(title: "早饭", done: hasMeal("早")) { addCheckIn(.meal, value: "早") }
+                MealCheckButton(title: "午饭", done: hasMeal("午")) { addCheckIn(.meal, value: "午") }
+                MealCheckButton(title: "晚饭", done: hasMeal("晚")) { addCheckIn(.meal, value: "晚") }
+                MealCheckButton(title: "加餐", done: hasMeal("加")) { addCheckIn(.meal, value: "加") }
             }
         }
     }
@@ -211,7 +228,6 @@ struct TodayView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gHairline, lineWidth: 1))
         .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 12, x: 0, y: 5)
     }
 
@@ -220,14 +236,6 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("跟我说一声").font(.gH3)
                 .foregroundColor(.gTextPrimary)
-            FlowLayout(spacing: 8) {
-                QuickPhraseButton(title: "我有点累") { addCheckIn(.back, value: "累") }
-                QuickPhraseButton(title: "早饭吃过了") { addCheckIn(.meal, value: "早") }
-                QuickPhraseButton(title: "午饭吃过了") { addCheckIn(.meal, value: "午") }
-                QuickPhraseButton(title: "晚饭吃过了") { addCheckIn(.meal, value: "晚") }
-                QuickPhraseButton(title: "我喝咖啡了") { addCheckIn(.coffee) }
-                QuickPhraseButton(title: "我准备睡了") { addCheckIn(.goodnight) }
-            }
             QuickNoteInput(text: $quickNoteText) {
                 submitQuickNote()
             }
@@ -245,13 +253,18 @@ struct TodayView: View {
         let today = calendar.startOfDay(for: Date())
         return workouts.first { calendar.isDate($0.date, inSameDayAs: today) }
     }
-    private var todayInspirationCount: Int {
-        let today = calendar.startOfDay(for: Date())
-        return inspirations.filter { calendar.isDate($0.createdAt, inSameDayAs: today) }.count
-    }
     private var todayCheckIns: [CheckIn] {
         let today = calendar.startOfDay(for: Date())
         return validCheckIns.filter { calendar.isDate($0.ts, inSameDayAs: today) }
+    }
+    private var todayCoffeeCount: Int {
+        todayCheckIns.filter { $0.kind == .coffee }.count
+    }
+    private var hasGoodnight: Bool {
+        todayCheckIns.contains { $0.kind == .goodnight }
+    }
+    private func hasMeal(_ value: String) -> Bool {
+        todayCheckIns.contains { $0.kind == .meal && $0.value == value }
     }
     private var validCheckIns: [CheckIn] {
         checkIns.filter { $0.typeRaw != "__deleted__" }
@@ -516,9 +529,8 @@ private struct NoteChip: View {
             .foregroundColor(foreground)
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
-            .background(background.opacity(0.82))
+            .background(background.opacity(0.7))
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(Color.gHairline.opacity(0.7), lineWidth: 1))
     }
 }
 
@@ -581,8 +593,134 @@ private struct HealthMetricTile: View {
         .padding(16)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
         .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+    }
+}
+
+private struct ActivityActionTile: View {
+    let type: DataType
+    let title: String
+    let value: String
+    let detail: String
+    var done: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 7) {
+                    Image(systemName: type.icon)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(type.main)
+                        .frame(width: 24, height: 24)
+                        .background(type.bg)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    Text(title)
+                        .font(.gCaption)
+                        .foregroundColor(.gTextSecondary)
+                    Spacer()
+                    Image(systemName: done ? "checkmark" : "plus")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(done ? .gSuccess : type.main)
+                }
+                Text(value)
+                    .font(.system(size: 25, weight: .semibold))
+                    .foregroundColor(.gTextPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                Text(detail)
+                    .font(.gCaption)
+                    .foregroundColor(.gTextWeak)
+                Spacer(minLength: 0)
+                MiniTileBars(color: type.main)
+                    .frame(height: 22)
+                    .opacity(0.75)
+            }
+            .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+            .padding(16)
+            .background(Color.gSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct MealCheckButton: View {
+    let title: String
+    let done: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: done ? "checkmark.circle.fill" : "fork.knife")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(done ? .gSuccess : .dHabit)
+                    .frame(width: 30, height: 30)
+                    .background(done ? Color.dMoveBg : Color.dHabitBg)
+                    .clipShape(Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.gH3)
+                        .foregroundColor(.gTextPrimary)
+                    Text(done ? "已记录" : "点一下打卡")
+                        .font(.gCaption)
+                        .foregroundColor(.gTextSecondary)
+                }
+                Spacer()
+            }
+            .padding(14)
+            .background(Color.gSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: Color.gTextPrimary.opacity(done ? 0.055 : 0.04), radius: 11, x: 0, y: 5)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct SmallCheckTile: View {
+    let type: DataType
+    let title: String
+    let value: String
+    let detail: String
+    let done: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: type.icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(type.main)
+                        .frame(width: 30, height: 30)
+                        .background(type.bg)
+                        .clipShape(Circle())
+                    Spacer()
+                    Image(systemName: done ? "checkmark" : "plus")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(done ? .gSuccess : type.main)
+                }
+                Text(title)
+                    .font(.gH3)
+                    .foregroundColor(.gTextPrimary)
+                Text(value)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(type.main)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                Text(detail)
+                    .font(.gCaption)
+                    .foregroundColor(.gTextSecondary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 126, alignment: .leading)
+            .padding(15)
+            .background(Color.gSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .shadow(color: Color.gTextPrimary.opacity(0.055), radius: 12, x: 0, y: 5)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -642,7 +780,6 @@ private struct ActivityRingMetricTile: View {
         .padding(16)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
         .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
     }
 }
@@ -790,7 +927,7 @@ private struct QuickNoteInput: View {
         .padding(.vertical, 10)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.035), radius: 8, x: 0, y: 3)
     }
 
     private var canSubmit: Bool {

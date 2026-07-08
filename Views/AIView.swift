@@ -51,7 +51,7 @@ struct AIView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("AI 关心")
                             .font(.gCaption)
-                            .foregroundColor(.gTextSecondary)
+                            .foregroundColor(.gTextBody)
                         Text("今晚的小结")
                             .font(.gH3)
                             .foregroundColor(.gTextPrimary)
@@ -70,20 +70,19 @@ struct AIView: View {
             FlowLayout(spacing: 8) {
                 ReplyEvidenceChip(text: sleepEvidence, foreground: .dSleep, background: .dSleepBg)
                 ReplyEvidenceChip(text: deepSleepEvidence, foreground: .dSleep, background: .dSleepBg)
-                ReplyEvidenceChip(text: hrvEvidence, foreground: .dHrv, background: .gWarmApricotBg)
-                ReplyEvidenceChip(text: moodEvidence, foreground: .dMood, background: .gSelectedBg)
+                ReplyEvidenceChip(text: hrvEvidence, foreground: .dHrv, background: .dHrvBg)
+                ReplyEvidenceChip(text: moodEvidence, foreground: .dMood, background: .dMoodBg)
             }
             if !noteDetail.isEmpty {
                 Text(noteDetail)
                     .font(.gCaption)
-                    .foregroundColor(.gTextSecondary)
+                    .foregroundColor(.gTextBody)
                     .lineLimit(1)
             }
         }
         .padding(18)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.gHairline, lineWidth: 1))
         .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
     }
 
@@ -116,7 +115,7 @@ struct AIView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(title)
                     .font(.gCaption)
-                    .foregroundColor(.gTextSecondary)
+                    .foregroundColor(.gTextBody)
                     .padding(.leading, 2)
                 if messages.isEmpty {
                     Text("还没有新的回信。等你记录一点，依安会在这里回应你。")
@@ -152,10 +151,10 @@ struct AIView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(triggerLabel)
                             .font(.gCaption)
-                            .foregroundColor(.dMood)
+                            .foregroundColor(.dAi)
                             .padding(.horizontal, 9)
                             .padding(.vertical, 4)
-                            .background(Color.gSelectedBg)
+                            .background(Color.dAiBg.opacity(0.75))
                             .clipShape(Capsule())
                         Spacer(minLength: 8)
                         Text(formatTime(msg.createdAt))
@@ -165,10 +164,10 @@ struct AIView: View {
                     HStack(spacing: 6) {
                         Text(msg.readAt == nil ? "未读" : "已读")
                             .font(.gCaption)
-                            .foregroundColor(msg.readAt == nil ? .dMood : .gSuccess)
+                            .foregroundColor(msg.readAt == nil ? .dAi : .gSuccess)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(msg.readAt == nil ? Color.gSelectedBg : Color.dMoveBg)
+                            .background(msg.readAt == nil ? Color.dAiBg.opacity(0.75) : Color.dMoveBg.opacity(0.8))
                             .clipShape(Capsule())
                         if let readAt = msg.readAt {
                             Text("你在 \(formatTime(readAt)) 看过")
@@ -196,7 +195,7 @@ struct AIView: View {
                         } label: {
                             Text(expanded ? "收起" : "展开完整回信")
                                 .font(.gCaption)
-                                .foregroundColor(.dMood)
+                                .foregroundColor(.dAi)
                         }
                         .buttonStyle(.plain)
                     }
@@ -205,7 +204,6 @@ struct AIView: View {
             .padding(16)
             .background(Color.gSurface)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gHairline, lineWidth: 1))
             .shadow(color: Color.gTextPrimary.opacity(0.05), radius: 10, x: 0, y: 4)
         }
 
@@ -348,9 +346,8 @@ private struct ReplyEvidenceChip: View {
             .foregroundColor(foreground)
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
-            .background(background.opacity(0.82))
+            .background(background.opacity(0.7))
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(Color.gHairline.opacity(0.7), lineWidth: 1))
     }
 }
 

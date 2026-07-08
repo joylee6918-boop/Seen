@@ -64,6 +64,9 @@ extension Color {
     // 习惯 · 黄
     static let dHabitBg  = Color(red: 0xFF/255, green: 0xF7/255, blue: 0xD8/255)
     static let dHabit    = gWarmApricot
+    // 咖啡 · 棕金
+    static let dCoffeeBg = Color(red: 0xF7/255, green: 0xEF/255, blue: 0xE7/255)
+    static let dCoffee   = Color(red: 0xA8/255, green: 0x71/255, blue: 0x42/255)
     // 灵感 · 琥珀
     static let dIdeaBg   = Color(red: 0xFF/255, green: 0xF3/255, blue: 0xD8/255)
     static let dIdea     = Color(red: 0xD8/255, green: 0x9A/255, blue: 0x23/255)
@@ -87,7 +90,7 @@ extension Color {
 
 // MARK: - 数据类型 → 语义色 映射
 enum DataType {
-    case mood, sleep, hrv, heart, move, energy, floors, oxygen, temperature, vo2, sleepHeart, sound, habit, idea, ai, period
+    case mood, sleep, hrv, heart, move, energy, floors, oxygen, temperature, vo2, sleepHeart, sound, habit, coffee, idea, ai, period
 
     var main: Color {
         switch self {
@@ -104,6 +107,7 @@ enum DataType {
         case .sleepHeart: return .dSleepHeart
         case .sound:   return .dSound
         case .habit:   return .dHabit
+        case .coffee:  return .dCoffee
         case .idea:    return .dIdea
         case .ai:      return .dAi
         case .period:  return .dMood
@@ -124,6 +128,7 @@ enum DataType {
         case .sleepHeart: return .dSleepHeartBg
         case .sound:   return .dSoundBg
         case .habit:   return .dHabitBg
+        case .coffee:  return .dCoffeeBg
         case .idea:    return .dIdeaBg
         case .ai:      return .dAiBg
         case .period:  return .dMoodBg
@@ -145,6 +150,7 @@ enum DataType {
         case .sleepHeart: return "bed.double.fill"
         case .sound:   return "speaker.wave.2"
         case .habit:   return "checkmark.circle"
+        case .coffee:  return "cup.and.saucer.fill"
         case .idea:    return "lightbulb"
         case .ai:      return "sparkles"
         case .period:  return "drop.fill"
@@ -165,6 +171,7 @@ enum DataType {
         case .sleepHeart: return "睡眠心率"
         case .sound:   return "分贝"
         case .habit:   return "习惯"
+        case .coffee:  return "咖啡"
         case .idea:    return "灵感"
         case .ai:      return "AI"
         case .period:  return "经期"
