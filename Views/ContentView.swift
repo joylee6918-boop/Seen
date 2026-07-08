@@ -27,19 +27,21 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             TodayView()
-                .tabItem { Label("首页", systemImage: "house") }
+                .tabItem { Label("今天", systemImage: "house") }
                 .tag(0)
 
-            RecordView()
-                .tabItem { Label("记录", systemImage: "plus.circle") }
+            BodyView()
+                .tabItem { Label("身体", systemImage: "heart.text.square") }
                 .tag(1)
 
-            TrendView()
-                .tabItem { Label("最近", systemImage: "chart.xyaxis.line") }
+            AIView()
+                .tabItem { Label("关心", systemImage: "sparkles") }
                 .tag(2)
 
-            AIView()
-                .tabItem { Label("回信", systemImage: "sparkles") }
+            NavigationStack {
+                InspirationListView()
+            }
+                .tabItem { Label("洞悉", systemImage: "lightbulb") }
                 .tag(3)
 
             MoreView()

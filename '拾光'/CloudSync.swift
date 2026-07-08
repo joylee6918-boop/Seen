@@ -232,6 +232,7 @@ class CloudSync {
             "ts": isoFmt.string(from: item.createdAt),
             "text": item.content,
             "tags": ["priority": item.priorityRaw,
+                     "category": item.categoryRaw,
                      "isCompleted": item.isCompleted,
                      "completedAt": item.completedAt.map { isoFmt.string(from: $0) } ?? ""] as [String: Any]
         ]

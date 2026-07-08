@@ -4,6 +4,7 @@ import SwiftData
 // 我的页 — 个人区 + 回顾/AI陪伴/数据与安全 分组
 struct MoreView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var messageStore: MessageStore
     @Query private var moods: [DailyMood]
     @Query private var habits: [Habit]
     @Query private var inspirations: [Inspiration]
@@ -19,6 +20,7 @@ struct MoreView: View {
 
     @State private var isSyncing = false
     @State private var syncMessage = ""
+    @State private var lastManualSyncAt: Date? = nil
     @State private var showAlert = false
     @State private var showExport = false
     @State private var showPrivacy = false
@@ -80,6 +82,9 @@ struct MoreView: View {
             NavigationLink {
                 TrendView()
             } label: { Row(icon: "chart.xyaxis.line", color: .dSleep, title: "趋势统计") }
+            NavigationLink {
+                RecordView()
+            } label: { Row(icon: "plus.circle", color: .dMood, title: "记录此刻") }
         }
         .gleanCard(padding: 0)
     }
@@ -90,7 +95,7 @@ struct MoreView: View {
             GroupHeader(title: "AI 陪伴")
             NavigationLink {
                 AIView()
-            } label: { Row(icon: "sparkles", color: .dAi, title: "回信") }
+            } label: { Row(icon: "sparkles", color: .dAi, title: "关心") }
             Button {
                 Task { await syncAll() }
             } label: {
@@ -100,7 +105,7 @@ struct MoreView: View {
             .buttonStyle(.plain)
             NavigationLink {
                 InspirationListView()
-            } label: { Row(icon: "list.clipboard", color: .dIdea, title: "灵感管理") }
+            } label: { Row(icon: "list.clipboard", color: .dIdea, title: "洞悉") }
         }
         .gleanCard(padding: 0)
     }
@@ -149,18 +154,25 @@ struct MoreView: View {
         }
         let result = await CloudSync.shared.syncAll(moods: moods, habits: habits, inspirations: inspirations,
                                                     workouts: workouts, checkIns: checkIns)
+        await messageStore.syncFromServer()
+        lastManualSyncAt = Date()
         isSyncing = false
         let total = moods.count + workouts.count + checkIns.count + inspirations.count + habits.count
         if result.failed == 0 {
-            syncMessage = "同步完成：\(total) 条数据已上传。"
+            let time = Date().formatted(.dateTime.hour().minute().second())
+            syncMessage = "同步完成：\(total) 条数据已上传。\n回信状态已刷新。\n完成时间：\(time)"
         } else {
-            syncMessage = "同步完成：成功 \(result.succeeded) 条，失败 \(result.failed) 条。请稍后重试。"
+            let time = Date().formatted(.dateTime.hour().minute().second())
+            syncMessage = "同步完成：成功 \(result.succeeded) 条，失败 \(result.failed) 条。\n回信状态已刷新。\n完成时间：\(time)"
         }
         showAlert = true
     }
 
     private var syncTrailingText: String {
         if !cloudConfigured { return "未配置" }
+        if let lastManualSyncAt {
+            return "上次 \(lastManualSyncAt.formatted(.dateTime.hour().minute()))"
+        }
         return cloudUploadsEnabled ? "已开启" : "已关闭"
     }
 }
@@ -213,11 +225,15 @@ struct InspirationListView: View {
     @EnvironmentObject var messageStore: MessageStore
     @State private var newText = ""
     @State private var selectedPriority: Inspiration.Priority = .normal
+    @State private var selectedCategory: Inspiration.Category = .spark
     @State private var showCompleted = false
     @FocusState private var isInputFocused: Bool
 
     private var pending: [Inspiration] { inspirations.filter { !$0.isCompleted } }
     private var completed: [Inspiration] { inspirations.filter { $0.isCompleted } }
+    private func pending(_ category: Inspiration.Category) -> [Inspiration] {
+        pending.filter { $0.category == category }
+    }
 
     var body: some View {
         ZStack {
@@ -225,10 +241,13 @@ struct InspirationListView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     inputCard
-                    if !pending.isEmpty {
-                        sectionHeader("还没做", count: pending.count)
-                        ForEach(pending) { item in
-                            InspirationRow(item: item) { completeItem(item) } onDelete: { deleteItem(item) }
+                    ForEach(Inspiration.Category.allCases, id: \.self) { category in
+                        let items = pending(category)
+                        if !items.isEmpty {
+                            sectionHeader(category.rawValue, count: items.count)
+                            ForEach(items) { item in
+                                InspirationRow(item: item) { completeItem(item) } onDelete: { deleteItem(item) }
+                            }
                         }
                     }
                     if !completed.isEmpty {
@@ -254,7 +273,7 @@ struct InspirationListView: View {
                 .padding(.horizontal, 20).padding(.top, 10)
             }
         }
-        .navigationTitle("灵感清单")
+        .navigationTitle("洞悉")
         .navigationBarTitleDisplayMode(.large)
     }
 
@@ -272,6 +291,23 @@ struct InspirationListView: View {
                 }
                 .disabled(newText.isEmpty)
             }
+            HStack(spacing: 8) {
+                ForEach(Inspiration.Category.allCases, id: \.self) { c in
+                    Button {
+                        selectedCategory = c
+                    } label: {
+                        Label(c.rawValue, systemImage: c.icon)
+                            .font(.gCaption)
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .background(selectedCategory == c ? c.color.bg : Color.gSurface)
+                            .foregroundColor(selectedCategory == c ? c.color.main : .gTextSecondary)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(selectedCategory == c ? c.color.main : Color.gHairline, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 8) {
                 ForEach(Inspiration.Priority.allCases, id: \.self) { p in
                     Button {
@@ -306,7 +342,7 @@ struct InspirationListView: View {
 
     private func addItem() {
         guard !newText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        let item = Inspiration(content: newText.trimmingCharacters(in: .whitespaces), priority: selectedPriority)
+        let item = Inspiration(content: newText.trimmingCharacters(in: .whitespaces), priority: selectedPriority, category: selectedCategory)
         modelContext.insert(item)
         try? modelContext.save()
         Task { if let r = try? await CloudSync.shared.syncInspiration(item) { messageStore.apply(r) } }
@@ -351,6 +387,9 @@ private struct InspirationRow: View {
                     .foregroundColor(item.isCompleted ? .gTextSecondary : .gTextPrimary)
                     .multilineTextAlignment(.leading)
                 HStack(spacing: 6) {
+                    Label(item.category.rawValue, systemImage: item.category.icon)
+                        .font(.gCaption)
+                        .foregroundColor(item.category.color.main)
                     Text(item.priority.emoji + " " + item.priority.rawValue).font(.gCaption).foregroundColor(.gTextSecondary)
                     Text(item.createdAt.formatted(.dateTime.month().day())).font(.gCaption).foregroundColor(.gTextSecondary)
                 }
@@ -491,7 +530,8 @@ struct ExportView: View {
                 "content": item.content,
                 "isCompleted": item.isCompleted,
                 "createdAt": fmt.string(from: item.createdAt),
-                "priority": item.priorityRaw
+                "priority": item.priorityRaw,
+                "category": item.categoryRaw
             ]
             if let completedAt = item.completedAt { exported["completedAt"] = fmt.string(from: completedAt) }
             return exported

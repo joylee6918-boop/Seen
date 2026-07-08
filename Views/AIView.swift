@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import HealthKit
 
-// 回信页 — 小纸条 + 今天/更早的依安回复
+// 关心页 — 小纸条 + 依安回复历史
 struct AIView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \DailyMood.date, order: .reverse) private var moods: [DailyMood]
@@ -31,7 +31,7 @@ struct AIView: View {
                     .padding(.top, 8)
                 }
             }
-            .navigationTitle("回信")
+            .navigationTitle("关心")
             .navigationBarTitleDisplayMode(.inline)
             .task { await load() }
             .refreshable { await load() }
@@ -75,7 +75,7 @@ struct AIView: View {
     }
 
     private var repliesSection: some View {
-        ReplySection(title: "最近收到的回信", messages: replyMessages)
+        ReplySection(title: "依安给你的回声", messages: replyMessages)
     }
 
     private var replyMessages: [MessageData] {
@@ -145,6 +145,25 @@ struct AIView: View {
                         Text(formatTime(msg.createdAt))
                             .font(.gCaption)
                             .foregroundColor(.gTextSecondary)
+                    }
+                    HStack(spacing: 6) {
+                        Text(msg.readAt == nil ? "未读" : "已读")
+                            .font(.gCaption)
+                            .foregroundColor(msg.readAt == nil ? .dMood : .gSuccess)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(msg.readAt == nil ? Color.gSelectedBg : Color.dMoveBg)
+                            .clipShape(Capsule())
+                        if let readAt = msg.readAt {
+                            Text("你在 \(formatTime(readAt)) 看过")
+                                .font(.gCaption)
+                                .foregroundColor(.gTextSecondary)
+                        } else {
+                            Text("点开弹窗确认后会同步给云端")
+                                .font(.gCaption)
+                                .foregroundColor(.gTextSecondary)
+                                .lineLimit(1)
+                        }
                     }
                     Text(msg.text)
                         .font(.gBody)
