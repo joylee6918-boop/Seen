@@ -326,16 +326,16 @@ struct TodayView: View {
     }
 
     private func toggleMeal(_ value: String) {
-        if let existing = latestCheckIn(.meal, value: value) {
-            removeCheckIn(existing, toastText: "\(mealName(value))已取消")
+        if latestCheckIn(.meal, value: value) != nil {
+            removeTodayCheckIns(.meal, value: value, toastText: "\(mealName(value))已取消")
         } else {
             addCheckIn(.meal, value: value)
         }
     }
 
     private func toggleUniqueCheckIn(_ kind: CheckIn.Kind) {
-        if let existing = latestCheckIn(kind) {
-            removeCheckIn(existing, toastText: "\(kind.label)已取消")
+        if latestCheckIn(kind) != nil {
+            removeTodayCheckIns(kind, toastText: "\(kind.label)已取消")
         } else {
             addCheckIn(kind)
         }
@@ -355,6 +355,19 @@ struct TodayView: View {
     private func removeCheckIn(_ checkIn: CheckIn, toastText: String) {
         checkIn.typeRaw = "__deleted__"
         modelContext.delete(checkIn)
+        try? modelContext.save()
+        toast = ToastState(text: toastText, undo: nil)
+    }
+
+    private func removeTodayCheckIns(_ kind: CheckIn.Kind, value: String? = nil, toastText: String) {
+        let targets = todayCheckIns.filter { checkIn in
+            checkIn.kind == kind && (value == nil || checkIn.value == value)
+        }
+        guard !targets.isEmpty else { return }
+        for checkIn in targets {
+            checkIn.typeRaw = "__deleted__"
+            modelContext.delete(checkIn)
+        }
         try? modelContext.save()
         toast = ToastState(text: toastText, undo: nil)
     }
