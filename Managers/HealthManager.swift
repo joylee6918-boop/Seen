@@ -16,6 +16,7 @@ class HealthManager: ObservableObject {
         HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
         HKObjectType.quantityType(forIdentifier: .appleExerciseTime)!,
         HKObjectType.quantityType(forIdentifier: .appleStandTime)!,
+        HKObjectType.categoryType(forIdentifier: .appleStandHour)!,
         HKObjectType.quantityType(forIdentifier: .flightsClimbed)!,
         HKObjectType.quantityType(forIdentifier: .oxygenSaturation)!,
         HKObjectType.quantityType(forIdentifier: .vo2Max)!,
@@ -359,13 +360,20 @@ class HealthManager: ObservableObject {
     // MARK: - 第二档 · 趋势页可看
 
     func fetchTodayStandTime() async throws -> Double? {
-        guard let t = HKQuantityType.quantityType(forIdentifier: .appleStandTime) else { return nil }
+        guard let t = HKCategoryType.categoryType(forIdentifier: .appleStandHour) else { return nil }
         let (start, end) = todayRange()
         let p = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
         return try await withCheckedThrowingContinuation { cont in
-            let q = HKStatisticsQuery(quantityType: t, quantitySamplePredicate: p, options: .cumulativeSum) { _, r, e in
+            let q = HKSampleQuery(sampleType: t, predicate: p, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, e in
                 if let e = e { cont.resume(throwing: e); return }
-                cont.resume(returning: r?.sumQuantity()?.doubleValue(for: .hour()))
+                guard let samples = samples as? [HKCategorySample] else {
+                    cont.resume(returning: nil)
+                    return
+                }
+                let stoodHours = samples.filter {
+                    $0.value == HKCategoryValueAppleStandHour.stood.rawValue
+                }.count
+                cont.resume(returning: Double(stoodHours))
             }
             self.healthStore.execute(q)
         }
