@@ -5,12 +5,12 @@ import SwiftUI
 
 extension Color {
     // MARK: 基础色
-    /// 清爽浅灰紫页面背景
-    static let gBg       = Color(red: 0xF4/255, green: 0xF5/255, blue: 0xFA/255)
+    /// 清爽浅灰页面背景
+    static let gBg       = Color(red: 0xF3/255, green: 0xF5/255, blue: 0xF8/255)
     /// 普通卡片底
     static let gSurface  = Color.white
     /// AI/重点卡片底
-    static let gCompanionSurface = Color(red: 0xF8/255, green: 0xFA/255, blue: 0xFF/255)
+    static let gCompanionSurface = Color(red: 0xF7/255, green: 0xFB/255, blue: 0xFF/255)
     /// 极浅描边 / 分割线
     static let gHairline = Color(red: 0xE4/255, green: 0xE7/255, blue: 0xF2/255)
     /// 主卡描边 (#EADFD8)
@@ -20,26 +20,26 @@ extension Color {
     /// 正文文字
     static let gTextBody      = Color(red: 0x58/255, green: 0x5D/255, blue: 0x80/255)
     /// 次级文字
-    static let gTextSecondary = Color(red: 0x88/255, green: 0x8D/255, blue: 0xAF/255)
+    static let gTextSecondary = Color(red: 0x8C/255, green: 0x92/255, blue: 0xA3/255)
     /// 弱文字
-    static let gTextWeak      = Color(red: 0xB7/255, green: 0xBD/255, blue: 0xD2/255)
+    static let gTextWeak      = Color(red: 0xB9/255, green: 0xC0/255, blue: 0xCC/255)
     /// 选中底色
-    static let gSelectedBg    = Color(red: 0xE9/255, green: 0xF0/255, blue: 0xFF/255)
+    static let gSelectedBg    = Color(red: 0xE8/255, green: 0xF2/255, blue: 0xFF/255)
     /// 辅助暖黄
     static let gWarmApricot   = Color(red: 0xF3/255, green: 0xBE/255, blue: 0x3F/255)
     /// 暖黄淡底
     static let gWarmApricotBg = Color(red: 0xFF/255, green: 0xF7/255, blue: 0xDA/255)
 
     // MARK: 数据语义色 — 每种数据类型固定一色
-    // 心情 · 粉
-    static let dMoodBg   = Color(red: 0xFF/255, green: 0xE9/255, blue: 0xF0/255)
-    static let dMood     = Color(red: 0xFF/255, green: 0x5D/255, blue: 0x86/255)
+    // 心情 · 柔玫瑰
+    static let dMoodBg   = Color(red: 0xFF/255, green: 0xEE/255, blue: 0xF2/255)
+    static let dMood     = Color(red: 0xDF/255, green: 0x6D/255, blue: 0x82/255)
     // 睡眠 · 蓝
     static let dSleepBg  = Color(red: 0xEA/255, green: 0xF2/255, blue: 0xFF/255)
     static let dSleep    = Color(red: 0x4C/255, green: 0x9B/255, blue: 0xE8/255)
-    // HRV / 恢复 · 橘
-    static let dHrvBg    = Color(red: 0xF0/255, green: 0xEC/255, blue: 0xFF/255)
-    static let dHrv      = Color(red: 0x7B/255, green: 0x6D/255, blue: 0xFF/255)
+    // HRV / 恢复 · 靛蓝
+    static let dHrvBg    = Color(red: 0xEE/255, green: 0xF1/255, blue: 0xFF/255)
+    static let dHrv      = Color(red: 0x66/255, green: 0x78/255, blue: 0xD8/255)
     // 心率 · 红
     static let dHeartBg  = Color(red: 0xFF/255, green: 0xEA/255, blue: 0xEA/255)
     static let dHeart    = Color(red: 0xF5/255, green: 0x4D/255, blue: 0x58/255)
@@ -53,8 +53,8 @@ extension Color {
     static let dVo2Bg     = Color(red: 0xF0/255, green: 0xEC/255, blue: 0xFF/255)
     static let dVo2       = Color(red: 0x86/255, green: 0x65/255, blue: 0xFF/255)
     // 睡眠心率 · 粉红
-    static let dSleepHeartBg = Color(red: 0xFF/255, green: 0xEA/255, blue: 0xF3/255)
-    static let dSleepHeart   = Color(red: 0xF0/255, green: 0x67/255, blue: 0x9A/255)
+    static let dSleepHeartBg = Color(red: 0xFF/255, green: 0xEE/255, blue: 0xF2/255)
+    static let dSleepHeart   = Color(red: 0xD9/255, green: 0x64/255, blue: 0x7A/255)
     // 运动 · 绿
     static let dMoveBg   = Color(red: 0xE6/255, green: 0xFA/255, blue: 0xEF/255)
     static let dMove     = Color(red: 0x25/255, green: 0xD0/255, blue: 0x66/255)
@@ -62,14 +62,14 @@ extension Color {
     static let dEnergyBg = Color(red: 0xFF/255, green: 0xEE/255, blue: 0xEA/255)
     static let dEnergy   = Color(red: 0xF0/255, green: 0x5B/255, blue: 0x50/255)
     // 习惯 · 黄
-    static let dHabitBg  = Color(red: 0xFF/255, green: 0xF8/255, blue: 0xDD/255)
+    static let dHabitBg  = Color(red: 0xFF/255, green: 0xF7/255, blue: 0xD8/255)
     static let dHabit    = gWarmApricot
-    // 灵感 · 紫
-    static let dIdeaBg   = Color(red: 0xF2/255, green: 0xED/255, blue: 0xFF/255)
-    static let dIdea     = Color(red: 0x86/255, green: 0x65/255, blue: 0xFF/255)
-    // AI 陪伴 / 同步 · 品牌紫
+    // 灵感 · 琥珀
+    static let dIdeaBg   = Color(red: 0xFF/255, green: 0xF3/255, blue: 0xD8/255)
+    static let dIdea     = Color(red: 0xD8/255, green: 0x9A/255, blue: 0x23/255)
+    // AI 陪伴 / 同步 · 清蓝
     static let dAiBg     = gSelectedBg
-    static let dAi       = dMood
+    static let dAi       = dSleep
     // 分贝 / 声音 · 灰蓝
     static let dSoundBg  = Color(red: 0xEE/255, green: 0xF2/255, blue: 0xF6/255)
     static let dSound    = Color(red: 0x6B/255, green: 0x7B/255, blue: 0x8F/255)
@@ -215,7 +215,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Color.dMood)
+            .background(Color.dAi)
             .clipShape(Capsule())
             .opacity(configuration.isPressed ? 0.85 : 1.0)
     }

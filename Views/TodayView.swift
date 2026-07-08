@@ -175,10 +175,9 @@ struct TodayView: View {
                                      title: "最新心率",
                                      value: healthSnapshot.latestHeartRate.map { "\(Int($0)) bpm" } ?? "无数据",
                                      detail: "近 24 小时最新样本")
-                    HealthMetricTile(type: .move,
-                                     title: "运动圆环",
-                                     value: activityRingValue,
-                                     detail: "活动 / 锻炼 / 站立")
+                    ActivityRingMetricTile(kcal: healthSnapshot.activeKcal,
+                                           exerciseMinutes: healthSnapshot.exerciseMinutes,
+                                           standHours: healthSnapshot.standHours)
                     HealthMetricTile(type: .idea,
                                      title: "今日灵感",
                                      value: "\(todayInspirationCount)",
@@ -584,6 +583,106 @@ private struct HealthMetricTile: View {
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
         .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+    }
+}
+
+private struct ActivityRingMetricTile: View {
+    let kcal: Double?
+    let exerciseMinutes: Double?
+    let standHours: Double?
+
+    private var kcalText: String { kcal.map { "\(Int($0))" } ?? "--" }
+    private var exerciseText: String { exerciseMinutes.map { "\(Int($0.rounded()))" } ?? "--" }
+    private var standText: String { standHours.map { "\(Int($0.rounded()))" } ?? "--" }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 7) {
+                Image(systemName: "circle.circle")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.dMove)
+                    .frame(width: 24, height: 24)
+                    .background(Color.dMoveBg)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text("运动圆环")
+                    .font(.gCaption)
+                    .foregroundColor(.gTextSecondary)
+                    .lineLimit(1)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(kcalText)/300 千卡")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.dEnergy)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                Text("\(exerciseText)/30 分钟")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.dMove)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                Text("\(standText)/8 小时")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.dSleep)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            Spacer(minLength: 0)
+            HStack {
+                ActivityRings(kcal: kcal, exerciseMinutes: exerciseMinutes, standHours: standHours)
+                    .frame(width: 44, height: 44)
+                Spacer()
+                Text("合上活动圆环")
+                    .font(.gCaption)
+                    .foregroundColor(.gTextWeak)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .padding(16)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+    }
+}
+
+private struct ActivityRings: View {
+    let kcal: Double?
+    let exerciseMinutes: Double?
+    let standHours: Double?
+
+    var body: some View {
+        ZStack {
+            Ring(progress: progress(kcal, goal: 300), color: .dEnergy, lineWidth: 6, inset: 0)
+            Ring(progress: progress(exerciseMinutes, goal: 30), color: .dMove, lineWidth: 6, inset: 9)
+            Ring(progress: progress(standHours, goal: 8), color: .dSleep, lineWidth: 6, inset: 18)
+        }
+    }
+
+    private func progress(_ value: Double?, goal: Double) -> Double {
+        guard let value else { return 0 }
+        return min(max(value / goal, 0), 1)
+    }
+}
+
+private struct Ring: View {
+    let progress: Double
+    let color: Color
+    let lineWidth: CGFloat
+    let inset: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .inset(by: inset)
+                .stroke(color.opacity(0.14), lineWidth: lineWidth)
+            Circle()
+                .inset(by: inset)
+                .trim(from: 0, to: progress)
+                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
     }
 }
 

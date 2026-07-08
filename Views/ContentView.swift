@@ -9,16 +9,16 @@ struct ContentView: View {
         let appearance = UITabBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = UIColor(Color.gSurface)
-        appearance.shadowColor = UIColor(red: 0xE8/255, green: 0xE0/255, blue: 0xDC/255, alpha: 1)
+        appearance.shadowColor = UIColor(Color.gHairline)
         let item = UITabBarItemAppearance()
-        item.normal.iconColor = UIColor(red: 0x7F/255, green: 0x77/255, blue: 0x7C/255, alpha: 1)
-        item.normal.titleTextAttributes = [.foregroundColor: UIColor(red: 0x7F/255, green: 0x77/255, blue: 0x7C/255, alpha: 1)]
-        item.selected.iconColor = UIColor(red: 0xC9/255, green: 0x6F/255, blue: 0x83/255, alpha: 1)
-        item.selected.titleTextAttributes = [.foregroundColor: UIColor(red: 0xC9/255, green: 0x6F/255, blue: 0x83/255, alpha: 1)]
+        item.normal.iconColor = UIColor(Color.gTextSecondary)
+        item.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.gTextSecondary)]
+        item.selected.iconColor = UIColor(Color.dAi)
+        item.selected.titleTextAttributes = [.foregroundColor: UIColor(Color.dAi)]
         appearance.stackedLayoutAppearance = item
         appearance.inlineLayoutAppearance = item
         appearance.compactInlineLayoutAppearance = item
-        appearance.selectionIndicatorTintColor = UIColor(red: 0xF7/255, green: 0xE6/255, blue: 0xEA/255, alpha: 1)
+        appearance.selectionIndicatorTintColor = UIColor(Color.dAiBg)
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
         UITabBar.appearance().unselectedItemTintColor = UIColor(Color.gTextSecondary)
@@ -48,7 +48,7 @@ struct ContentView: View {
                 .tabItem { Label("我的", systemImage: "person.crop.circle") }
                 .tag(4)
         }
-        .tint(Color.dMood)
+        .tint(Color.dAi)
         .toolbarBackground(Color.gSurface, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
         .overlay(alignment: .center) {
@@ -102,7 +102,7 @@ private struct MessagePopup: View {
                     Text("看到了")
                         .font(.gH3).foregroundColor(.white)
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
-                        .background(Color.dMood).clipShape(Capsule())
+                        .background(Color.dAi).clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
             }
