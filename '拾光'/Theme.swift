@@ -26,7 +26,7 @@ extension Color {
     /// 选中底色
     static let gSelectedBg    = Color(red: 0xEB/255, green: 0xE7/255, blue: 0xF7/255)
     /// 辅助暖黄
-    static let gWarmApricot   = Color(red: 0xFF/255, green: 0xD6/255, blue: 0x0A/255)
+    static let gWarmApricot   = Color(red: 0xF2/255, green: 0xB8/255, blue: 0x21/255)
     /// 暖黄淡底
     static let gWarmApricotBg = Color(red: 0xFB/255, green: 0xED/255, blue: 0xBF/255)
 
@@ -62,14 +62,14 @@ extension Color {
     static let dEnergyBg = Color(red: 0xFF/255, green: 0xE7/255, blue: 0xD0/255)
     static let dEnergy   = Color(red: 0xFF/255, green: 0x1F/255, blue: 0x5B/255)
     // 习惯 · 黄
-    static let dHabitBg  = Color(red: 0xFA/255, green: 0xE9/255, blue: 0xA8/255)
+    static let dHabitBg  = Color(red: 0xE6/255, green: 0xF7/255, blue: 0xD6/255)
     static let dHabit    = Color(red: 0x5A/255, green: 0xD8/255, blue: 0x63/255)
     // 咖啡 · 棕金
     static let dCoffeeBg = Color(red: 0xF5/255, green: 0xE6/255, blue: 0xD5/255)
     static let dCoffee   = Color(red: 0xBD/255, green: 0x86/255, blue: 0x55/255)
     // 灵感 · 淡薰衣草
-    static let dIdeaBg   = Color(red: 0xFF/255, green: 0xF6/255, blue: 0xB8/255)
-    static let dIdea     = Color(red: 0xFF/255, green: 0xC4/255, blue: 0x00/255)
+    static let dIdeaBg   = Color(red: 0xFF/255, green: 0xF1/255, blue: 0xC7/255)
+    static let dIdea     = Color(red: 0xE8/255, green: 0xA5/255, blue: 0x00/255)
     // AI 陪伴 / 同步 · 薰衣草
     static let dAiBg     = gSelectedBg
     static let dAi       = Color(red: 0xBF/255, green: 0x5A/255, blue: 0xFF/255)

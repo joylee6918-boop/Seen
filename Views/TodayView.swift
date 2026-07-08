@@ -198,10 +198,26 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 12) {
             GrowSectionHeader(title: "吃饭", trailing: nil)
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                MealCheckButton(title: "早饭", done: hasMeal("早")) { toggleMeal("早") }
-                MealCheckButton(title: "午饭", done: hasMeal("午")) { toggleMeal("午") }
-                MealCheckButton(title: "晚饭", done: hasMeal("晚")) { toggleMeal("晚") }
-                MealCheckButton(title: "加餐", done: hasMeal("加")) { toggleMeal("加") }
+                MealCheckButton(title: "早饭",
+                                icon: "cup.and.saucer.fill",
+                                color: .dCoffee,
+                                background: .dCoffeeBg,
+                                done: hasMeal("早")) { toggleMeal("早") }
+                MealCheckButton(title: "午饭",
+                                icon: "leaf.fill",
+                                color: Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255),
+                                background: Color(red: 0xE4/255, green: 0xF8/255, blue: 0xE9/255),
+                                done: hasMeal("午")) { toggleMeal("午") }
+                MealCheckButton(title: "晚饭",
+                                icon: "fork.knife",
+                                color: Color(red: 0xFF/255, green: 0x6B/255, blue: 0x3D/255),
+                                background: Color(red: 0xFF/255, green: 0xE7/255, blue: 0xD8/255),
+                                done: hasMeal("晚")) { toggleMeal("晚") }
+                MealCheckButton(title: "加餐",
+                                icon: "takeoutbag.and.cup.and.straw.fill",
+                                color: Color(red: 0xFF/255, green: 0x4D/255, blue: 0xA6/255),
+                                background: Color(red: 0xFF/255, green: 0xE3/255, blue: 0xF0/255),
+                                done: hasMeal("加")) { toggleMeal("加") }
             }
         }
     }
@@ -725,17 +741,20 @@ private struct ActivityActionTile: View {
 
 private struct MealCheckButton: View {
     let title: String
+    let icon: String
+    let color: Color
+    let background: Color
     let done: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: done ? "checkmark.circle.fill" : "fork.knife")
+                Image(systemName: done ? "checkmark.circle.fill" : icon)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(done ? .gSuccess : .dHabit)
+                    .foregroundColor(done ? .gSuccess : color)
                     .frame(width: 30, height: 30)
-                    .background(done ? Color.dMoveBg : Color.dHabitBg)
+                    .background(done ? Color.dMoveBg : background)
                     .clipShape(Circle())
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -826,40 +845,40 @@ private struct ActivityRingMetricTile: View {
                     .foregroundColor(.gTextSecondary)
                     .lineLimit(1)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(kcalText)/300 千卡")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.dEnergy)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                Text("\(exerciseText)/30 分钟")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.dMove)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                Text("\(standText)/8 小时")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.dSleep)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+            HStack(alignment: .center, spacing: 12) {
+                ActivityRings(kcal: kcal, exerciseMinutes: exerciseMinutes, standHours: standHours)
+                    .frame(width: 64, height: 64)
+                VStack(alignment: .leading, spacing: 2) {
+                    RingMetricText(text: "\(kcalText)/300 千卡", color: .dEnergy)
+                    RingMetricText(text: "\(exerciseText)/30 分钟", color: .dMove)
+                    RingMetricText(text: "\(standText)/8 小时", color: .dSleep)
+                }
             }
             Spacer(minLength: 0)
-            HStack {
-                ActivityRings(kcal: kcal, exerciseMinutes: exerciseMinutes, standHours: standHours)
-                    .frame(width: 44, height: 44)
-                Spacer()
-                Text("合上活动圆环")
-                    .font(.gCaption)
-                    .foregroundColor(.gTextWeak)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-            }
+            Text("合上活动圆环")
+                .font(.gCaption)
+                .foregroundColor(.gTextWeak)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
         }
         .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
         .padding(16)
         .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+    }
+}
+
+private struct RingMetricText: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundColor(color)
+            .lineLimit(1)
+            .minimumScaleFactor(0.68)
     }
 }
 
@@ -870,10 +889,11 @@ private struct ActivityRings: View {
 
     var body: some View {
         ZStack {
-            Ring(progress: progress(kcal, goal: 300), color: .dEnergy, lineWidth: 6, inset: 0)
-            Ring(progress: progress(exerciseMinutes, goal: 30), color: .dMove, lineWidth: 6, inset: 9)
-            Ring(progress: progress(standHours, goal: 8), color: .dSleep, lineWidth: 6, inset: 18)
+            Ring(progress: progress(kcal, goal: 300), color: .dEnergy, lineWidth: 9, inset: 0)
+            Ring(progress: progress(exerciseMinutes, goal: 30), color: .dMove, lineWidth: 9, inset: 13)
+            Ring(progress: progress(standHours, goal: 8), color: .dSleep, lineWidth: 9, inset: 26)
         }
+        .padding(2)
     }
 
     private func progress(_ value: Double?, goal: Double) -> Double {
@@ -892,12 +912,13 @@ private struct Ring: View {
         ZStack {
             Circle()
                 .inset(by: inset)
-                .stroke(color.opacity(0.14), lineWidth: lineWidth)
+                .stroke(color.opacity(0.16), lineWidth: lineWidth)
             Circle()
                 .inset(by: inset)
                 .trim(from: 0, to: progress)
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
                 .rotationEffect(.degrees(-90))
+                .shadow(color: color.opacity(0.24), radius: 2.5, x: 0, y: 1)
         }
     }
 }
