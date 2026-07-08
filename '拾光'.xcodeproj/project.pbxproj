@@ -498,8 +498,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "-----Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Seen;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "需要读取你的HRV和睡眠数据";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "需要读取你的健康数据";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "需要读取睡眠、心率、活动、血氧、手腕温度和最大摄氧量，用来展示身体状态";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "需要读取你的健康数据，用来同步和解释当天状态";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "获取位置用于显示天气";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -536,8 +536,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "-----Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Seen;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "需要读取你的HRV和睡眠数据";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "需要读取你的健康数据";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "需要读取睡眠、心率、活动、血氧、手腕温度和最大摄氧量，用来展示身体状态";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "需要读取你的健康数据，用来同步和解释当天状态";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "获取位置用于显示天气";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

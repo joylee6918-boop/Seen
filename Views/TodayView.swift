@@ -145,38 +145,26 @@ struct TodayView: View {
                                  title: "睡眠",
                                  value: healthSnapshot.sleepHours.map { String(format: "%.1f h", $0) } ?? "未戴表",
                                  detail: healthSnapshot.sleepHours == nil ? "Apple Watch 无睡眠样本" : sleepCardSub)
-                HealthMetricTile(type: .hrv,
-                                 title: "恢复 HRV",
-                                 value: healthSnapshot.hrv.map { "\(Int($0)) ms" } ?? "无数据",
-                                 detail: healthSnapshot.hrv.map(hrvLabel) ?? "今日暂无样本")
-                HealthMetricTile(type: .heart,
-                                 title: "静息心率",
-                                 value: healthSnapshot.heartRate.map { "\(Int($0)) bpm" } ?? "无数据",
-                                 detail: "HealthKit 今日平均")
                 HealthMetricTile(type: .move,
                                  title: "步数",
                                  value: healthSnapshot.steps.map { $0.formatted(.number.precision(.fractionLength(0))) } ?? "0",
                                  detail: "今日累计")
                 HealthMetricTile(type: .energy,
-                                 title: "活动能量",
+                                 title: "运动圆环",
+                                 value: activityRingValue,
+                                 detail: "活动 / 锻炼 / 站立")
+                HealthMetricTile(type: .energy,
+                                 title: "消耗卡路里",
                                  value: healthSnapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "无数据",
                                  detail: "今日累计")
-                HealthMetricTile(type: .habit,
-                                 title: "站立",
-                                 value: healthSnapshot.standHours.map { "\(Int($0.rounded())) h" } ?? "无数据",
-                                 detail: "Apple Stand Time")
-                HealthMetricTile(type: .floors,
-                                 title: "楼层",
-                                 value: healthSnapshot.floors.map { "\(Int($0)) 层" } ?? "无数据",
-                                 detail: "今日累计")
-                HealthMetricTile(type: .oxygen,
-                                 title: "血氧",
-                                 value: healthSnapshot.bloodOxygen.map { "\(Int(($0 * 100).rounded()))%" } ?? "无数据",
-                                 detail: "今日平均")
-                HealthMetricTile(type: .sound,
-                                 title: "环境音量",
-                                 value: healthSnapshot.audioDb.map { "\(Int($0.rounded())) dB" } ?? "无数据",
-                                 detail: healthSnapshot.audioDb.map(dbLabel) ?? "今日暂无样本")
+                HealthMetricTile(type: .heart,
+                                 title: "最新心率",
+                                 value: healthSnapshot.latestHeartRate.map { "\(Int($0)) bpm" } ?? "无数据",
+                                 detail: "近 24 小时最新样本")
+                HealthMetricTile(type: .heart,
+                                 title: "静息心率",
+                                 value: healthSnapshot.heartRate.map { "\(Int($0)) bpm" } ?? "无数据",
+                                 detail: "HealthKit 今日平均")
             }
         }
         .gleanCard()
@@ -323,12 +311,13 @@ struct TodayView: View {
         healthSnapshot.sleepScoreBreakdown = await healthManager.fetchSleepScoreBreakdown()
         healthSnapshot.sleepStages = try? await healthManager.fetchLastNightSleepStages()
         healthSnapshot.heartRate = try? await healthManager.fetchTodayRestingHeartRate()
+        healthSnapshot.latestHeartRate = try? await healthManager.fetchLatestHeartRate()
         healthSnapshot.steps = try? await healthManager.fetchTodaySteps()
         healthSnapshot.activeKcal = try? await healthManager.fetchTodayActiveEnergy()
+        healthSnapshot.exerciseMinutes = try? await healthManager.fetchTodayExerciseMinutes()
         healthSnapshot.standHours = try? await healthManager.fetchTodayStandTime()
         healthSnapshot.floors = try? await healthManager.fetchTodayFlightsClimbed()
         healthSnapshot.bloodOxygen = try? await healthManager.fetchTodayBloodOxygen()
-        healthSnapshot.audioDb = try? await healthManager.fetchTodayAudioExposure()
         healthSnapshot.lastUpdated = Date()
         // HealthKit 全量数据推 VPS — Claude 读一条 health record 就能看到当天身体全貌
         Task {
@@ -343,7 +332,7 @@ struct TodayView: View {
                 standHours: healthSnapshot.standHours,
                 floors: healthSnapshot.floors,
                 bloodOxygen: healthSnapshot.bloodOxygen,
-                audioDb: healthSnapshot.audioDb
+                audioDb: nil
             ) {
                 messageStore.apply(r)
             }
@@ -447,6 +436,12 @@ struct TodayView: View {
     }
     private func dbLabel(_ db: Double) -> String { db < 60 ? "安静" : (db < 80 ? "正常" : "偏吵") }
     private func hrvLabel(_ v: Double) -> String { v < 30 ? "偏低" : (v < 60 ? "正常" : "良好") }
+    private var activityRingValue: String {
+        let kcal = healthSnapshot.activeKcal.map { "\(Int($0))" } ?? "--"
+        let exercise = healthSnapshot.exerciseMinutes.map { "\(Int($0.rounded()))" } ?? "--"
+        let stand = healthSnapshot.standHours.map { "\(Int($0.rounded()))" } ?? "--"
+        return "\(kcal) / \(exercise) / \(stand)"
+    }
     private func moodStateText(_ mood: DailyMood) -> String {
         if mood.tags.contains("疲惫") { return "有点疲惫" }
         if let first = mood.tags.first { return first }
@@ -743,12 +738,13 @@ private struct HealthSnapshot {
     var sleepScoreBreakdown: HealthManager.SleepScoreBreakdown? = nil
     var sleepStages: (deep: Double, core: Double, rem: Double, awake: Double)? = nil
     var heartRate: Double? = nil
+    var latestHeartRate: Double? = nil
     var steps: Double? = nil
     var activeKcal: Double? = nil
+    var exerciseMinutes: Double? = nil
     var standHours: Double? = nil
     var floors: Double? = nil
     var bloodOxygen: Double? = nil
-    var audioDb: Double? = nil
     var lastUpdated: Date? = nil
 }
 

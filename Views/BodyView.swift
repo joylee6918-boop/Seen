@@ -13,9 +13,7 @@ struct BodyView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         headerCard
-                        bodySection
-                        activitySection
-                        environmentSection
+                        deeperMetricsSection
                         Spacer(minLength: 100)
                     }
                     .padding(.horizontal, 20)
@@ -48,45 +46,55 @@ struct BodyView: View {
         .gleanCard()
     }
 
-    private var bodySection: some View {
-        MetricSection(title: "身体") {
-            BodyMetricTile(type: .sleep, title: "睡眠",
-                           value: snapshot.sleepHours.map { String(format: "%.1f h", $0) } ?? "未戴表",
-                           detail: snapshot.sleepHours == nil ? "Apple Watch 无睡眠样本" : sleepDetail)
-            BodyMetricTile(type: .hrv, title: "HRV 恢复",
-                           value: snapshot.hrv.map { "\(Int($0)) ms" } ?? "无数据",
-                           detail: snapshot.hrv.map(hrvLabel) ?? "今日暂无样本")
-            BodyMetricTile(type: .heart, title: "静息心率",
-                           value: snapshot.heartRate.map { "\(Int($0)) bpm" } ?? "无数据",
-                           detail: "HealthKit 今日平均")
-            BodyMetricTile(type: .oxygen, title: "血氧",
-                           value: snapshot.bloodOxygen.map { "\(Int(($0 * 100).rounded()))%" } ?? "无数据",
-                           detail: "HealthKit 今日平均")
-        }
-    }
-
-    private var activitySection: some View {
-        MetricSection(title: "日常活动") {
-            BodyMetricTile(type: .move, title: "步数",
-                           value: snapshot.steps.map { $0.formatted(.number.precision(.fractionLength(0))) } ?? "0",
-                           detail: "今日累计")
-            BodyMetricTile(type: .energy, title: "活动能量",
-                           value: snapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "无数据",
-                           detail: "今日累计")
-            BodyMetricTile(type: .habit, title: "站立",
-                           value: snapshot.standHours.map { "\(Int($0.rounded())) h" } ?? "无数据",
-                           detail: "Apple Stand Time")
-            BodyMetricTile(type: .floors, title: "楼层",
-                           value: snapshot.floors.map { "\(Int($0)) 层" } ?? "无数据",
-                           detail: "今日累计")
-        }
-    }
-
-    private var environmentSection: some View {
-        MetricSection(title: "环境") {
-            BodyMetricTile(type: .sound, title: "环境音量",
-                           value: snapshot.audioDb.map { "\(Int($0.rounded())) dB" } ?? "无数据",
-                           detail: snapshot.audioDb.map(dbLabel) ?? "今日暂无样本")
+    private var deeperMetricsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("身体指标")
+                    .font(.gH2)
+                    .foregroundColor(.gTextPrimary)
+                Spacer()
+                Text("编辑")
+                    .font(.gBody)
+                    .foregroundColor(.gTextSecondary)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.gTextSecondary)
+            }
+            BodyMetricRow(type: .oxygen,
+                          title: "血氧",
+                          value: snapshot.bloodOxygen.map { "\(Int(($0 * 100).rounded()))" } ?? "--",
+                          unit: "%",
+                          status: snapshot.bloodOxygen == nil ? "无数据" : "正常",
+                          comparison: "HealthKit 今日平均",
+                          dateText: "今天")
+            BodyMetricRow(type: .hrv,
+                          title: "手腕温度",
+                          value: snapshot.wristTemperature.map { String(format: "%.1f", $0) } ?? "--",
+                          unit: "℃",
+                          status: snapshot.wristTemperature == nil ? "无数据" : "已记录",
+                          comparison: "最近 30 天最新睡眠样本",
+                          dateText: "最近")
+            BodyMetricRow(type: .move,
+                          title: "最大摄氧量",
+                          value: snapshot.vo2Max.map { String(format: "%.1f", $0) } ?? "--",
+                          unit: "mL/kg/min",
+                          status: snapshot.vo2Max == nil ? "无数据" : "已记录",
+                          comparison: "最近一年最新样本",
+                          dateText: "最近")
+            BodyMetricRow(type: .heart,
+                          title: "睡眠时心率",
+                          value: snapshot.sleepHeartRate.map { "\(Int($0.rounded()))" } ?? "--",
+                          unit: "bpm",
+                          status: snapshot.sleepHeartRate == nil ? "无数据" : "正常",
+                          comparison: snapshot.sleepHeartRate == nil ? "需要昨晚 Apple Watch 睡眠样本" : "昨晚睡眠区间平均",
+                          dateText: "昨晚")
+            BodyMetricRow(type: .hrv,
+                          title: "HRV",
+                          value: snapshot.hrv.map { "\(Int($0))" } ?? "--",
+                          unit: "ms",
+                          status: snapshot.hrv.map(hrvLabel) ?? "无数据",
+                          comparison: "今日恢复参考",
+                          dateText: "今天")
         }
     }
 
@@ -100,12 +108,10 @@ struct BodyView: View {
         snapshot.sleepStages = try? await healthManager.fetchLastNightSleepStages()
         snapshot.sleepScore = await healthManager.fetchSleepScoreBreakdown()
         snapshot.heartRate = try? await healthManager.fetchTodayRestingHeartRate()
-        snapshot.steps = try? await healthManager.fetchTodaySteps()
-        snapshot.activeKcal = try? await healthManager.fetchTodayActiveEnergy()
-        snapshot.standHours = try? await healthManager.fetchTodayStandTime()
-        snapshot.floors = try? await healthManager.fetchTodayFlightsClimbed()
         snapshot.bloodOxygen = try? await healthManager.fetchTodayBloodOxygen()
-        snapshot.audioDb = try? await healthManager.fetchTodayAudioExposure()
+        snapshot.wristTemperature = try? await healthManager.fetchLatestWristTemperature()
+        snapshot.vo2Max = try? await healthManager.fetchLatestVO2Max()
+        snapshot.sleepHeartRate = try? await healthManager.fetchLastNightSleepHeartRate()
         snapshot.updatedAt = Date()
         loading = false
     }
@@ -131,7 +137,6 @@ struct BodyView: View {
     }
 
     private func hrvLabel(_ v: Double) -> String { v < 30 ? "偏低" : (v < 60 ? "正常" : "良好") }
-    private func dbLabel(_ db: Double) -> String { db < 60 ? "安静" : (db < 80 ? "正常" : "偏吵") }
     private func clock(_ date: Date) -> String { date.formatted(.dateTime.hour().minute()) }
     private func formatHours(_ h: Double) -> String {
         let mins = Int(h * 60)
@@ -193,17 +198,116 @@ private struct BodyMetricTile: View {
     }
 }
 
+private struct BodyMetricRow: View {
+    let type: DataType
+    let title: String
+    let value: String
+    let unit: String
+    let status: String
+    let comparison: String
+    let dateText: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center) {
+                HStack(spacing: 8) {
+                    Image(systemName: type.icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(type.main)
+                        .frame(width: 28, height: 28)
+                        .background(type.bg)
+                        .clipShape(Circle())
+                    Text(title)
+                        .font(.gH3)
+                        .foregroundColor(.gTextPrimary)
+                }
+                Spacer()
+                Text(dateText)
+                    .font(.gBody)
+                    .foregroundColor(.gTextSecondary)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.gTextSecondary)
+            }
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(value)
+                            .font(.system(size: 38, weight: .semibold))
+                            .foregroundColor(.gTextPrimary)
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                        Text(unit)
+                            .font(.gH3)
+                            .foregroundColor(.gTextPrimary)
+                    }
+                    HStack(spacing: 6) {
+                        Image(systemName: status == "无数据" ? "questionmark.circle.fill" : "checkmark.circle.fill")
+                            .foregroundColor(status == "无数据" ? .gTextSecondary : .gSuccess)
+                        Text(status)
+                            .font(.gBody)
+                            .foregroundColor(status == "无数据" ? .gTextSecondary : .gSuccess)
+                    }
+                    Text(comparison)
+                        .font(.gBody)
+                        .foregroundColor(.gTextSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                Spacer()
+                MiniTrend(color: type.main, background: type.bg)
+                    .frame(width: 132, height: 44)
+            }
+        }
+        .padding(18)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.04), radius: 12, x: 0, y: 5)
+    }
+}
+
+private struct MiniTrend: View {
+    let color: Color
+    let background: Color
+
+    var body: some View {
+        GeometryReader { geo in
+            let points: [CGFloat] = [0.35, 0.42, 0.32, 0.50, 0.44, 0.48, 0.40]
+            let step = geo.size.width / CGFloat(points.count - 1)
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(background.opacity(0.55))
+                Path { path in
+                    for index in points.indices {
+                        let x = CGFloat(index) * step
+                        let y = geo.size.height * points[index]
+                        if index == 0 { path.move(to: CGPoint(x: x, y: y)) }
+                        else { path.addLine(to: CGPoint(x: x, y: y)) }
+                    }
+                }
+                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                ForEach(points.indices, id: \.self) { index in
+                    Circle()
+                        .fill(index == points.indices.last ? color : Color.gSurface)
+                        .overlay(Circle().stroke(color, lineWidth: 3))
+                        .frame(width: 12, height: 12)
+                        .position(x: CGFloat(index) * step, y: geo.size.height * points[index])
+                }
+            }
+        }
+    }
+}
+
 private struct BodySnapshot {
     var hrv: Double?
     var sleepHours: Double?
     var sleepStages: (deep: Double, core: Double, rem: Double, awake: Double)?
     var sleepScore: HealthManager.SleepScoreBreakdown?
     var heartRate: Double?
-    var steps: Double?
-    var activeKcal: Double?
-    var standHours: Double?
-    var floors: Double?
     var bloodOxygen: Double?
-    var audioDb: Double?
+    var wristTemperature: Double?
+    var vo2Max: Double?
+    var sleepHeartRate: Double?
     var updatedAt: Date?
 }

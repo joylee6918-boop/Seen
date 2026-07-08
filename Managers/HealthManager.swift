@@ -14,15 +14,16 @@ class HealthManager: ObservableObject {
         HKObjectType.quantityType(forIdentifier: .stepCount)!,
         HKObjectType.quantityType(forIdentifier: .heartRate)!,
         HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
+        HKObjectType.quantityType(forIdentifier: .appleExerciseTime)!,
         HKObjectType.quantityType(forIdentifier: .appleStandTime)!,
         HKObjectType.quantityType(forIdentifier: .flightsClimbed)!,
         HKObjectType.quantityType(forIdentifier: .oxygenSaturation)!,
         HKObjectType.quantityType(forIdentifier: .vo2Max)!,
+        HKObjectType.quantityType(forIdentifier: .appleSleepingWristTemperature)!,
         HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
         HKObjectType.quantityType(forIdentifier: .walkingHeartRateAverage)!,
         HKObjectType.categoryType(forIdentifier: .mindfulSession)!,
         HKObjectType.categoryType(forIdentifier: .menstrualFlow)!,
-        HKObjectType.quantityType(forIdentifier: .environmentalAudioExposure)!,
         HKObjectType.workoutType(),
     ]
 
@@ -322,6 +323,13 @@ class HealthManager: ObservableObject {
         }
     }
 
+    func fetchLatestHeartRate() async throws -> Double? {
+        guard let t = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
+        let start = Calendar.current.date(byAdding: .hour, value: -24, to: Date())!
+        let p = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
+        return try await fetchLatestQuantity(t, predicate: p, unit: HKUnit(from: "count/min"))
+    }
+
     func fetchTodayActiveEnergy() async throws -> Double? {
         guard let t = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) else { return nil }
         let (start, end) = todayRange()
@@ -330,6 +338,19 @@ class HealthManager: ObservableObject {
             let q = HKStatisticsQuery(quantityType: t, quantitySamplePredicate: p, options: .cumulativeSum) { _, r, e in
                 if let e = e { cont.resume(throwing: e); return }
                 cont.resume(returning: r?.sumQuantity()?.doubleValue(for: HKUnit.kilocalorie()))
+            }
+            self.healthStore.execute(q)
+        }
+    }
+
+    func fetchTodayExerciseMinutes() async throws -> Double? {
+        guard let t = HKQuantityType.quantityType(forIdentifier: .appleExerciseTime) else { return nil }
+        let (start, end) = todayRange()
+        let p = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        return try await withCheckedThrowingContinuation { cont in
+            let q = HKStatisticsQuery(quantityType: t, quantitySamplePredicate: p, options: .cumulativeSum) { _, r, e in
+                if let e = e { cont.resume(throwing: e); return }
+                cont.resume(returning: r?.sumQuantity()?.doubleValue(for: .minute()))
             }
             self.healthStore.execute(q)
         }
@@ -376,6 +397,62 @@ class HealthManager: ObservableObject {
         }
     }
 
+    func fetchLatestVO2Max() async throws -> Double? {
+        guard let t = HKQuantityType.quantityType(forIdentifier: .vo2Max) else { return nil }
+        let start = Calendar.current.date(byAdding: .day, value: -365, to: Date())!
+        let p = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
+        return try await fetchLatestQuantity(t, predicate: p, unit: HKUnit(from: "mL/kg*min"))
+    }
+
+    func fetchLatestWristTemperature() async throws -> Double? {
+        guard let t = HKQuantityType.quantityType(forIdentifier: .appleSleepingWristTemperature) else { return nil }
+        let start = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+        let p = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
+        return try await fetchLatestQuantity(t, predicate: p, unit: .degreeCelsius())
+    }
+
+    func fetchLastNightSleepHeartRate() async throws -> Double? {
+        guard let sleepType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis),
+              let heartType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
+        let cal = Calendar.current
+        let now = Date()
+        let lookback = cal.date(byAdding: .hour, value: -24, to: now)!
+        let p = HKQuery.predicateForSamples(withStart: lookback, end: now, options: .strictStartDate)
+        let sleepWindow: (Date, Date)? = try await withCheckedThrowingContinuation { cont in
+            let q = HKSampleQuery(sampleType: sleepType, predicate: p, limit: HKObjectQueryNoLimit,
+                                  sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, samples, e in
+                if let e = e { cont.resume(throwing: e); return }
+                guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: nil); return }
+                let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
+                guard !watch.isEmpty else { cont.resume(returning: nil); return }
+                let asleep = watch.filter { $0.value == HKCategoryValueSleepAnalysis.asleepCore.rawValue
+                    || $0.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue
+                    || $0.value == HKCategoryValueSleepAnalysis.asleepREM.rawValue
+                    || $0.value == HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue }
+                guard !asleep.isEmpty else { cont.resume(returning: nil); return }
+                var sessions: [(Date, Date)] = []
+                for sm in asleep.sorted(by: { $0.startDate < $1.startDate }) {
+                    if let last = sessions.last, sm.startDate.timeIntervalSince(last.1) < 3600 {
+                        sessions[sessions.count - 1] = (last.0, max(last.1, sm.endDate))
+                    } else {
+                        sessions.append((sm.startDate, sm.endDate))
+                    }
+                }
+                cont.resume(returning: sessions.last)
+            }
+            self.healthStore.execute(q)
+        }
+        guard let sleepWindow else { return nil }
+        let heartPredicate = HKQuery.predicateForSamples(withStart: sleepWindow.0, end: sleepWindow.1, options: .strictStartDate)
+        return try await withCheckedThrowingContinuation { cont in
+            let q = HKStatisticsQuery(quantityType: heartType, quantitySamplePredicate: heartPredicate, options: .discreteAverage) { _, r, e in
+                if let e = e { cont.resume(throwing: e); return }
+                cont.resume(returning: r?.averageQuantity()?.doubleValue(for: HKUnit(from: "count/min")))
+            }
+            self.healthStore.execute(q)
+        }
+    }
+
     func fetchTodayMindfulMinutes() async throws -> Double? {
         guard let t = HKCategoryType.categoryType(forIdentifier: .mindfulSession) else { return nil }
         let (start, end) = todayRange()
@@ -400,6 +477,18 @@ class HealthManager: ObservableObject {
             let q = HKStatisticsQuery(quantityType: t, quantitySamplePredicate: p, options: .discreteAverage) { _, r, e in
                 if let e = e { cont.resume(throwing: e); return }
                 cont.resume(returning: r?.averageQuantity()?.doubleValue(for: HKUnit.decibelAWeightedSoundPressureLevel()))
+            }
+            self.healthStore.execute(q)
+        }
+    }
+
+    private func fetchLatestQuantity(_ type: HKQuantityType, predicate: NSPredicate, unit: HKUnit) async throws -> Double? {
+        try await withCheckedThrowingContinuation { cont in
+            let q = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1,
+                                  sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]) { _, samples, e in
+                if let e = e { cont.resume(throwing: e); return }
+                let sample = (samples as? [HKQuantitySample])?.first
+                cont.resume(returning: sample?.quantity.doubleValue(for: unit))
             }
             self.healthStore.execute(q)
         }
