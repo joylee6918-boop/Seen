@@ -644,9 +644,8 @@ private struct HealthMetricTile: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
             Spacer(minLength: 0)
-            MiniTileBars(color: type.main)
-                .frame(height: 22)
-                .opacity(0.75)
+            CardAccentBlock(color: type.main, background: type.bg)
+                .frame(height: 30)
         }
         .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
         .padding(16)
@@ -699,9 +698,8 @@ private struct ActivityActionTile: View {
                 .foregroundColor(.gTextWeak)
             Spacer(minLength: 0)
             HStack(spacing: 8) {
-                MiniTileBars(color: type.main)
-                    .frame(height: 22)
-                    .opacity(0.75)
+                CardAccentBlock(color: type.main, background: type.bg)
+                    .frame(height: 30)
                 if let cancelTitle, let cancelAction {
                     Button(action: cancelAction) {
                         Text(cancelTitle)
@@ -904,27 +902,26 @@ private struct Ring: View {
     }
 }
 
-private struct MiniTileBars: View {
+private struct CardAccentBlock: View {
     let color: Color
+    let background: Color
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 4) {
-            ForEach([0.22, 0.48, 0.82, 0.58, 0.72, 0.38], id: \.self) { ratio in
+            ForEach([0.28, 0.52, 0.78, 0.46, 0.66], id: \.self) { ratio in
                 RoundedRectangle(cornerRadius: 3)
                     .fill(color)
-                    .frame(width: 5, height: 22 * ratio)
+                    .frame(width: 5, height: 18 * ratio)
             }
             Spacer(minLength: 0)
-            Circle()
-                .fill(color.opacity(0.35))
-                .frame(width: 5, height: 5)
-            Circle()
-                .fill(color.opacity(0.25))
-                .frame(width: 5, height: 5)
-            Circle()
-                .fill(color.opacity(0.18))
-                .frame(width: 5, height: 5)
+            Circle().fill(color.opacity(0.45)).frame(width: 5, height: 5)
+            Circle().fill(color.opacity(0.28)).frame(width: 5, height: 5)
+            Circle().fill(color.opacity(0.18)).frame(width: 5, height: 5)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(background.opacity(0.72))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

@@ -7,8 +7,8 @@ extension Color {
     // MARK: 基础色
     /// 中性暖灰米白页面背景
     static let gBg       = Color(red: 0xF7/255, green: 0xF5/255, blue: 0xF0/255)
-    /// 普通卡片底
-    static let gSurface  = Color(red: 0xFF/255, green: 0xFD/255, blue: 0xF7/255)
+    /// 普通卡片底: 主体保持白色
+    static let gSurface  = Color.white
     /// AI/重点卡片底
     static let gCompanionSurface = Color(red: 0xFA/255, green: 0xF6/255, blue: 0xFB/255)
     /// 极浅描边 / 分割线
