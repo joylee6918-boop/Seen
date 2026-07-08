@@ -240,6 +240,7 @@ struct InspirationListView: View {
             Color.gBg.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    insightHeader
                     inputCard
                     ForEach(Inspiration.Category.allCases, id: \.self) { category in
                         let items = pending(category)
@@ -277,12 +278,37 @@ struct InspirationListView: View {
         .navigationBarTitleDisplayMode(.large)
     }
 
+    private var insightHeader: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "lightbulb.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.dIdea)
+                .frame(width: 46, height: 46)
+                .background(Color.dIdeaBg)
+                .clipShape(Circle())
+            VStack(alignment: .leading, spacing: 4) {
+                Text("洞悉收纳箱")
+                    .font(.gH2)
+                    .foregroundColor(.gTextPrimary)
+                Text("\(pending.count) 条待处理 · \(completed.count) 条已完成")
+                    .font(.gCaption)
+                    .foregroundColor(.gTextSecondary)
+            }
+            Spacer()
+        }
+        .padding(18)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
+    }
+
     private var inputCard: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
                 TextField("突然想到…", text: $newText, axis: .vertical)
                     .focused($isInputFocused).lineLimit(1...4).font(.gBody)
-                    .padding(12).background(Color.gSurface).clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(12).background(Color.gBg).clipShape(RoundedRectangle(cornerRadius: 14))
                 Button {
                     addItem()
                 } label: {
@@ -327,7 +353,11 @@ struct InspirationListView: View {
                 Spacer()
             }
         }
-        .gleanCard()
+        .padding(16)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 12, x: 0, y: 5)
     }
 
     private func sectionHeader(_ title: String, count: Int) -> some View {
@@ -396,9 +426,10 @@ private struct InspirationRow: View {
             }
             Spacer()
         }
-        .padding(14).background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.gHairline, lineWidth: 1))
+        .padding(15)
+        .background(item.category.color.bg.opacity(0.55))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { onDelete() } label: { Label("删除", systemImage: "trash") }
         }

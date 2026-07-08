@@ -41,9 +41,22 @@ struct AIView: View {
     private var tonightNoteCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("今晚的小纸条")
-                    .font(.gCaption)
-                    .foregroundColor(.dMood)
+                HStack(spacing: 10) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.dAi)
+                        .frame(width: 36, height: 36)
+                        .background(Color.dAiBg)
+                        .clipShape(Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("AI 关心")
+                            .font(.gCaption)
+                            .foregroundColor(.gTextSecondary)
+                        Text("今晚的小结")
+                            .font(.gH3)
+                            .foregroundColor(.gTextPrimary)
+                    }
+                }
                 Spacer()
                 if loading { ProgressView() }
             }
@@ -68,10 +81,10 @@ struct AIView: View {
             }
         }
         .padding(18)
-        .background(Color.gCompanionSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gNoteBorder, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.03), radius: 8, x: 0, y: 3)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
     }
 
     private var repliesSection: some View {
@@ -129,9 +142,12 @@ struct AIView: View {
 
         var body: some View {
             HStack(alignment: .top, spacing: 12) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color.gWarmApricot.opacity(0.55))
-                    .frame(width: 2)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.dAi)
+                    .frame(width: 28, height: 28)
+                    .background(Color.dAiBg)
+                    .clipShape(Circle())
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(triggerLabel)
@@ -188,8 +204,9 @@ struct AIView: View {
             }
             .padding(16)
             .background(Color.gSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gHairline, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gHairline, lineWidth: 1))
+            .shadow(color: Color.gTextPrimary.opacity(0.05), radius: 10, x: 0, y: 4)
         }
 
         private var shouldCollapse: Bool {

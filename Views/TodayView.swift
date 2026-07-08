@@ -77,17 +77,25 @@ struct TodayView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - 今晚的小纸条
+    // MARK: - 今日状态
     private var tonightNote: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("今晚的小纸条")
-                        .font(.gCaption)
-                        .foregroundColor(.dMood)
-                Text("今晚先别硬撑")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(.gTextPrimary)
+                HStack(spacing: 12) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.dAi)
+                        .frame(width: 42, height: 42)
+                        .background(Color.dAiBg)
+                        .clipShape(Circle())
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("依安看过了")
+                            .font(.gCaption)
+                            .foregroundColor(.gTextSecondary)
+                        Text("今晚先别硬撑")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundColor(.gTextPrimary)
+                    }
                 }
                 Spacer()
                 Text(Date().formatted(.dateTime.hour().minute()))
@@ -122,10 +130,10 @@ struct TodayView: View {
             }
         }
         .padding(18)
-        .background(Color.gCompanionSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gNoteBorder, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.03), radius: 8, x: 0, y: 3)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
     }
 
     // MARK: - 健康数据核对
@@ -193,8 +201,9 @@ struct TodayView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gHairline, lineWidth: 1))
+        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 12, x: 0, y: 5)
     }
 
     // MARK: - 快捷打卡
@@ -533,9 +542,9 @@ private struct HealthMetricTile: View {
         }
         .frame(maxWidth: .infinity, minHeight: 94, alignment: .leading)
         .padding(12)
-        .background(type.bg.opacity(0.42))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
+        .background(type.bg.opacity(0.82))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
     }
 }
 
@@ -565,8 +574,8 @@ private struct SeenRow: View {
         .padding(.vertical, 10)
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.gCompanionSurface.opacity(0.62))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Color.dAiBg.opacity(0.7))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -588,9 +597,9 @@ private struct QuickPhraseButton: View {
                 .foregroundColor(pressed ? .dMood : .gTextBody)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .background(pressed ? Color.gSelectedBg : Color.gSurface)
+                .background(pressed ? Color.dMoodBg : Color.gSurface)
                 .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color.gHairline, lineWidth: 1))
+                .overlay(Capsule().stroke(pressed ? Color.dMood : Color.gHairline, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
