@@ -987,7 +987,7 @@ private struct QuickNoteInput: View {
             Button(action: onSubmit) {
                 Text("发送")
                     .font(.gCaption)
-                    .foregroundColor(canSubmit ? .dMood : .gTextSecondary)
+                    .foregroundColor(canSubmit ? .dAi : .gTextSecondary)
             }
             .disabled(!canSubmit)
         }
