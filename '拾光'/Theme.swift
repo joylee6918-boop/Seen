@@ -57,7 +57,7 @@ extension Color {
     static let dSleepHeart   = Color(red: 0xFF/255, green: 0x4D/255, blue: 0xA6/255)
     // 运动 · 绿
     static let dMoveBg   = Color(red: 0xE2/255, green: 0xF1/255, blue: 0xCE/255)
-    static let dMove     = Color(red: 0x8B/255, green: 0xFF/255, blue: 0x00/255)
+    static let dMove     = Color(red: 0x30/255, green: 0xD1/255, blue: 0x58/255)
     // 能量 · 温橙
     static let dEnergyBg = Color(red: 0xFF/255, green: 0xE7/255, blue: 0xD0/255)
     static let dEnergy   = Color(red: 0xFF/255, green: 0x1F/255, blue: 0x5B/255)
