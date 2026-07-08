@@ -30,6 +30,7 @@ struct TodayView: View {
                     VStack(spacing: 16) {
                         header
                         tonightNote
+                        healthDataOverview
                         recentlySeen
                         quickCheckIn
                         Spacer(minLength: 100)
@@ -93,7 +94,7 @@ struct TodayView: View {
                     .font(.gCaption)
                     .foregroundColor(.gTextSecondary)
             }
-            Text("我看见你今天有点累。睡眠和恢复都在提醒你，今晚慢一点就好。")
+            Text(tonightNoteBody)
                 .font(.gBody)
                 .foregroundColor(.gTextBody)
                 .lineSpacing(4)
@@ -101,7 +102,7 @@ struct TodayView: View {
                 .lineLimit(2)
             HStack(spacing: 8) {
                 NoteChip(
-                    text: healthSnapshot.sleepHours.map { "睡眠 \(String(format: "%.1fh", $0))" } ?? "睡眠 --",
+                    text: healthSnapshot.sleepHours.map { "睡眠 \(String(format: "%.1fh", $0))" } ?? "睡眠 未戴表",
                     foreground: .dSleep,
                     background: .dSleepBg
                 )
@@ -125,6 +126,60 @@ struct TodayView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gNoteBorder, lineWidth: 1))
         .shadow(color: Color.gTextPrimary.opacity(0.03), radius: 8, x: 0, y: 3)
+    }
+
+    // MARK: - 健康数据核对
+    private var healthDataOverview: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("健康数据")
+                    .font(.gH3)
+                    .foregroundColor(.gTextPrimary)
+                Spacer()
+                Text(healthSnapshot.lastUpdated.map { "更新 \(formatClock($0))" } ?? "正在读取")
+                    .font(.gCaption)
+                    .foregroundColor(.gTextSecondary)
+            }
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                HealthMetricTile(type: .sleep,
+                                 title: "睡眠",
+                                 value: healthSnapshot.sleepHours.map { String(format: "%.1f h", $0) } ?? "未戴表",
+                                 detail: healthSnapshot.sleepHours == nil ? "Apple Watch 无睡眠样本" : sleepCardSub)
+                HealthMetricTile(type: .hrv,
+                                 title: "恢复 HRV",
+                                 value: healthSnapshot.hrv.map { "\(Int($0)) ms" } ?? "无数据",
+                                 detail: healthSnapshot.hrv.map(hrvLabel) ?? "今日暂无样本")
+                HealthMetricTile(type: .heart,
+                                 title: "静息心率",
+                                 value: healthSnapshot.heartRate.map { "\(Int($0)) bpm" } ?? "无数据",
+                                 detail: "HealthKit 今日平均")
+                HealthMetricTile(type: .move,
+                                 title: "步数",
+                                 value: healthSnapshot.steps.map { $0.formatted(.number.precision(.fractionLength(0))) } ?? "0",
+                                 detail: "今日累计")
+                HealthMetricTile(type: .energy,
+                                 title: "活动能量",
+                                 value: healthSnapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "无数据",
+                                 detail: "今日累计")
+                HealthMetricTile(type: .habit,
+                                 title: "站立",
+                                 value: healthSnapshot.standHours.map { "\(Int($0.rounded())) h" } ?? "无数据",
+                                 detail: "Apple Stand Time")
+                HealthMetricTile(type: .floors,
+                                 title: "楼层",
+                                 value: healthSnapshot.floors.map { "\(Int($0)) 层" } ?? "无数据",
+                                 detail: "今日累计")
+                HealthMetricTile(type: .oxygen,
+                                 title: "血氧",
+                                 value: healthSnapshot.bloodOxygen.map { "\(Int(($0 * 100).rounded()))%" } ?? "无数据",
+                                 detail: "今日平均")
+                HealthMetricTile(type: .sound,
+                                 title: "环境音量",
+                                 value: healthSnapshot.audioDb.map { "\(Int($0.rounded())) dB" } ?? "无数据",
+                                 detail: healthSnapshot.audioDb.map(dbLabel) ?? "今日暂无样本")
+            }
+        }
+        .gleanCard()
     }
 
     // MARK: - 刚刚看见
@@ -161,7 +216,9 @@ struct TodayView: View {
                 .foregroundColor(.gTextPrimary)
             FlowLayout(spacing: 8) {
                 QuickPhraseButton(title: "我有点累") { addCheckIn(.back, value: "累") }
-                QuickPhraseButton(title: "我吃过了") { addCheckIn(.meal, value: "吃过了") }
+                QuickPhraseButton(title: "早饭吃过了") { addCheckIn(.meal, value: "早") }
+                QuickPhraseButton(title: "午饭吃过了") { addCheckIn(.meal, value: "午") }
+                QuickPhraseButton(title: "晚饭吃过了") { addCheckIn(.meal, value: "晚") }
                 QuickPhraseButton(title: "我喝咖啡了") { addCheckIn(.coffee) }
                 QuickPhraseButton(title: "我准备睡了") { addCheckIn(.goodnight) }
             }
@@ -272,6 +329,7 @@ struct TodayView: View {
         healthSnapshot.floors = try? await healthManager.fetchTodayFlightsClimbed()
         healthSnapshot.bloodOxygen = try? await healthManager.fetchTodayBloodOxygen()
         healthSnapshot.audioDb = try? await healthManager.fetchTodayAudioExposure()
+        healthSnapshot.lastUpdated = Date()
         // HealthKit 全量数据推 VPS — Claude 读一条 health record 就能看到当天身体全貌
         Task {
             if let r = try? await CloudSync.shared.syncHealthSnapshot(
@@ -362,6 +420,12 @@ struct TodayView: View {
         }
         return "我会把今天的心情、睡眠和身体信号放在一起看。你不用记得很完整，先把这一刻放下来就好。"
     }
+    private var tonightNoteBody: String {
+        if healthSnapshot.sleepHours == nil {
+            return "昨晚没有 Apple Watch 睡眠数据，我先不替你猜。今晚照着真实状态慢慢收尾。"
+        }
+        return "我看见你今天有点累。睡眠和恢复都在提醒你，今晚慢一点就好。"
+    }
     private func moodLabel(_ s: Int) -> String { ["很糟糕","有点低","还好啦","不错","超级棒"][max(0, min(s-1, 4))] }
     private func sleepQualityLabel(_ h: Double) -> String { h < 5 ? "偏少" : (h < 7 ? "一般" : "良好") }
     private var sleepCardSub: String {
@@ -378,6 +442,9 @@ struct TodayView: View {
         if mins >= 60 { return String(format: "%.1fh", h) }
         return "\(mins)min"
     }
+    private func formatClock(_ date: Date) -> String {
+        date.formatted(.dateTime.hour().minute())
+    }
     private func dbLabel(_ db: Double) -> String { db < 60 ? "安静" : (db < 80 ? "正常" : "偏吵") }
     private func hrvLabel(_ v: Double) -> String { v < 30 ? "偏低" : (v < 60 ? "正常" : "良好") }
     private func moodStateText(_ mood: DailyMood) -> String {
@@ -389,7 +456,13 @@ struct TodayView: View {
         switch c.kind {
         case .coffee: return "你喝了咖啡"
         case .goodnight: return "你准备睡了"
-        case .meal: return "你吃过了"
+        case .meal:
+            switch c.value {
+            case "早": return "你吃了早饭"
+            case "午": return "你吃了午饭"
+            case "晚": return "你吃了晚饭"
+            default: return "你吃过了"
+            }
         case .back: return c.value == "累" ? "你说有点累" : "你说身体有点\(c.value)"
         case .period: return "你记录了经期"
         case .note: return "你说：\(c.value)"
@@ -429,6 +502,45 @@ private struct NoteChip: View {
             .background(background.opacity(0.82))
             .clipShape(Capsule())
             .overlay(Capsule().stroke(Color.gHairline.opacity(0.7), lineWidth: 1))
+    }
+}
+
+private struct HealthMetricTile: View {
+    let type: DataType
+    let title: String
+    let value: String
+    let detail: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 7) {
+                Image(systemName: type.icon)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(type.main)
+                    .frame(width: 24, height: 24)
+                    .background(type.bg)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text(title)
+                    .font(.gCaption)
+                    .foregroundColor(.gTextSecondary)
+                    .lineLimit(1)
+            }
+            Text(value)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundColor(.gTextPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+            Text(detail)
+                .font(.gCaption)
+                .foregroundColor(.gTextWeak)
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+        }
+        .frame(maxWidth: .infinity, minHeight: 94, alignment: .leading)
+        .padding(12)
+        .background(type.bg.opacity(0.42))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
     }
 }
 
@@ -637,6 +749,7 @@ private struct HealthSnapshot {
     var floors: Double? = nil
     var bloodOxygen: Double? = nil
     var audioDb: Double? = nil
+    var lastUpdated: Date? = nil
 }
 
 // MARK: - 睡眠详情弹窗

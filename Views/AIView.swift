@@ -237,6 +237,9 @@ struct AIView: View {
     }
 
     private var noteReason: String {
+        if sleepHours == nil {
+            return "昨晚没有 Apple Watch 睡眠数据，我先不替你猜睡了多久。"
+        }
         if (sleepHours ?? 8) < 6.5 || (hrv ?? 60) < 35 {
             return "你今天睡得不太够，恢复信号也偏低。"
         }
@@ -244,7 +247,7 @@ struct AIView: View {
     }
 
     private var sleepEvidence: String {
-        sleepHours.map { "睡眠 \(String(format: "%.1fh", $0))" } ?? "睡眠 --"
+        sleepHours.map { "睡眠 \(String(format: "%.1fh", $0))" } ?? "睡眠 未戴表"
     }
 
     private var deepSleepEvidence: String {

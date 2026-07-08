@@ -60,9 +60,11 @@ class HealthManager: ObservableObject {
                                   sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]) { _, samples, e in
                 if let e = e { cont.resume(throwing: e); return }
                 guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: nil); return }
-                // 优先 Watch 数据
+                // 睡眠只信 Apple Watch. 如果昨晚没戴表, 不回退到手机/第三方/手填样本,
+                // 否则会把不可靠的睡眠时长同步给 Claude.
                 let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
-                let toUse = watch.isEmpty ? s : watch
+                guard !watch.isEmpty else { cont.resume(returning: nil); return }
+                let toUse = watch
                 // 取 asleep 样本 (有细分用细分, 没有回退 unspecified)
                 let detailed: Set<Int> = [
                     HKCategoryValueSleepAnalysis.asleepCore.rawValue,
@@ -117,7 +119,8 @@ class HealthManager: ObservableObject {
                 if let e = e { cont.resume(throwing: e); return }
                 guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: nil); return }
                 let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
-                let toUse = watch.isEmpty ? s : watch
+                guard !watch.isEmpty else { cont.resume(returning: nil); return }
+                let toUse = watch
                 // 找最近一夜的 asleep 范围 (跟 fetchLastNightSleep 同逻辑)
                 let asleepAll = toUse.filter { $0.value == HKCategoryValueSleepAnalysis.asleepCore.rawValue
                     || $0.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue
@@ -181,7 +184,8 @@ class HealthManager: ObservableObject {
                                   sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, samples, _ in
                 guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: []); return }
                 let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
-                let toUse = watch.isEmpty ? s : watch
+                guard !watch.isEmpty else { cont.resume(returning: []); return }
+                let toUse = watch
                 let detailed: Set<Int> = [
                     HKCategoryValueSleepAnalysis.asleepCore.rawValue,
                     HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
