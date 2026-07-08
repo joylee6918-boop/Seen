@@ -176,7 +176,9 @@ struct TodayView: View {
                     ActivityActionTile(type: .coffee,
                                        title: "咖啡",
                                        value: todayCoffeeCount == 0 ? "未记录" : "\(todayCoffeeCount) 杯",
-                                       detail: "今天咖啡打卡") {
+                                       detail: "点一下加一杯",
+                                       cancelTitle: todayCoffeeCount > 0 ? "撤掉一杯" : nil,
+                                       cancelAction: todayCoffeeCount > 0 ? { removeLatestCheckIn(.coffee) } : nil) {
                         addCheckIn(.coffee)
                     }
                     ActivityActionTile(type: .sleep,
@@ -184,7 +186,7 @@ struct TodayView: View {
                                        value: hasGoodnight ? "已记录" : "未记录",
                                        detail: "今晚收尾打卡",
                                        done: hasGoodnight) {
-                        addCheckIn(.goodnight)
+                        toggleUniqueCheckIn(.goodnight)
                     }
                 }
             }
@@ -196,10 +198,10 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 12) {
             GrowSectionHeader(title: "吃饭", trailing: nil)
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                MealCheckButton(title: "早饭", done: hasMeal("早")) { addCheckIn(.meal, value: "早") }
-                MealCheckButton(title: "午饭", done: hasMeal("午")) { addCheckIn(.meal, value: "午") }
-                MealCheckButton(title: "晚饭", done: hasMeal("晚")) { addCheckIn(.meal, value: "晚") }
-                MealCheckButton(title: "加餐", done: hasMeal("加")) { addCheckIn(.meal, value: "加") }
+                MealCheckButton(title: "早饭", done: hasMeal("早")) { toggleMeal("早") }
+                MealCheckButton(title: "午饭", done: hasMeal("午")) { toggleMeal("午") }
+                MealCheckButton(title: "晚饭", done: hasMeal("晚")) { toggleMeal("晚") }
+                MealCheckButton(title: "加餐", done: hasMeal("加")) { toggleMeal("加") }
             }
         }
     }
@@ -320,6 +322,50 @@ struct TodayView: View {
             if let msg = try? await CloudSync.shared.syncCheckIn(c) {
                 messageStore.apply(msg)
             }
+        }
+    }
+
+    private func toggleMeal(_ value: String) {
+        if let existing = latestCheckIn(.meal, value: value) {
+            removeCheckIn(existing, toastText: "\(mealName(value))已取消")
+        } else {
+            addCheckIn(.meal, value: value)
+        }
+    }
+
+    private func toggleUniqueCheckIn(_ kind: CheckIn.Kind) {
+        if let existing = latestCheckIn(kind) {
+            removeCheckIn(existing, toastText: "\(kind.label)已取消")
+        } else {
+            addCheckIn(kind)
+        }
+    }
+
+    private func removeLatestCheckIn(_ kind: CheckIn.Kind, value: String? = nil) {
+        guard let existing = latestCheckIn(kind, value: value) else { return }
+        removeCheckIn(existing, toastText: "\(kind.label)已取消")
+    }
+
+    private func latestCheckIn(_ kind: CheckIn.Kind, value: String? = nil) -> CheckIn? {
+        todayCheckIns.first { checkIn in
+            checkIn.kind == kind && (value == nil || checkIn.value == value)
+        }
+    }
+
+    private func removeCheckIn(_ checkIn: CheckIn, toastText: String) {
+        checkIn.typeRaw = "__deleted__"
+        modelContext.delete(checkIn)
+        try? modelContext.save()
+        toast = ToastState(text: toastText, undo: nil)
+    }
+
+    private func mealName(_ value: String) -> String {
+        switch value {
+        case "早": return "早饭"
+        case "午": return "午饭"
+        case "晚": return "晚饭"
+        case "加": return "加餐"
+        default: return "吃饭"
         }
     }
 
@@ -603,46 +649,66 @@ private struct ActivityActionTile: View {
     let value: String
     let detail: String
     var done: Bool = false
+    var cancelTitle: String? = nil
+    var cancelAction: (() -> Void)? = nil
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 7) {
-                    Image(systemName: type.icon)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(type.main)
-                        .frame(width: 24, height: 24)
-                        .background(type.bg)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    Text(title)
-                        .font(.gCaption)
-                        .foregroundColor(.gTextSecondary)
-                    Spacer()
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 7) {
+                Image(systemName: type.icon)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(type.main)
+                    .frame(width: 24, height: 24)
+                    .background(type.bg)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text(title)
+                    .font(.gCaption)
+                    .foregroundColor(.gTextSecondary)
+                Spacer()
+                Button(action: action) {
                     Image(systemName: done ? "checkmark" : "plus")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(done ? .gSuccess : type.main)
+                        .frame(width: 28, height: 28)
+                        .background((done ? Color.dMoveBg : type.bg).opacity(0.85))
+                        .clipShape(Circle())
                 }
-                Text(value)
-                    .font(.system(size: 25, weight: .semibold))
-                    .foregroundColor(.gTextPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                Text(detail)
-                    .font(.gCaption)
-                    .foregroundColor(.gTextWeak)
-                Spacer(minLength: 0)
+                .buttonStyle(.plain)
+            }
+            Text(value)
+                .font(.system(size: 25, weight: .semibold))
+                .foregroundColor(.gTextPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+            Text(detail)
+                .font(.gCaption)
+                .foregroundColor(.gTextWeak)
+            Spacer(minLength: 0)
+            HStack(spacing: 8) {
                 MiniTileBars(color: type.main)
                     .frame(height: 22)
                     .opacity(0.75)
+                if let cancelTitle, let cancelAction {
+                    Button(action: cancelAction) {
+                        Text(cancelTitle)
+                            .font(.gCaption)
+                            .foregroundColor(.gTextSecondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(Color.gBg)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
-            .padding(16)
-            .background(Color.gSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
         }
-        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .padding(16)
+        .background(Color.gSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
     }
 }
 
@@ -664,9 +730,11 @@ private struct MealCheckButton: View {
                     Text(title)
                         .font(.gH3)
                         .foregroundColor(.gTextPrimary)
-                    Text(done ? "已记录" : "点一下打卡")
+                    Text(done ? "已记录 · 再点取消" : "点一下打卡")
                         .font(.gCaption)
                         .foregroundColor(.gTextSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
                 }
                 Spacer()
             }
