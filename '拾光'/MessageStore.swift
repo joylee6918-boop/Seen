@@ -9,6 +9,7 @@ class MessageStore: ObservableObject {
     @Published var queue: [MessageData] = []      // 待弹的未读队列
     @Published var current: MessageData? = nil    // 当前弹窗显示的
     @Published var history: [MessageData] = []    // 全部历史留言 (留言盒展示)
+    @Published var archivedMessageIDs: Set<Int> = []  // 本地归档, 不影响服务端留言
 
     // reaction — 每次打卡服务端返回的即时反应. 跟留言完全分开:
     // 不入队列, 不持久化, 跟随打卡动作浮 4 秒自动消失. 同步成功才点亮.
@@ -24,8 +25,14 @@ class MessageStore: ObservableObject {
         return dir.appendingPathComponent("purr_messages.json")
     }()
 
+    private let archiveURL: URL = {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return dir.appendingPathComponent("purr_archived_messages.json")
+    }()
+
     init() {
         loadFromDisk()
+        loadArchiveFromDisk()
     }
 
     // MARK: - 持久化
@@ -42,6 +49,35 @@ class MessageStore: ObservableObject {
             withIntermediateDirectories: true
         )
         try? data.write(to: fileURL)
+    }
+
+    private func loadArchiveFromDisk() {
+        guard let data = try? Data(contentsOf: archiveURL),
+              let ids = try? JSONDecoder().decode(Set<Int>.self, from: data) else { return }
+        archivedMessageIDs = ids
+    }
+
+    private func saveArchiveToDisk() {
+        guard let data = try? JSONEncoder().encode(archivedMessageIDs) else { return }
+        try? FileManager.default.createDirectory(
+            at: archiveURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try? data.write(to: archiveURL)
+    }
+
+    func isArchived(_ msg: MessageData) -> Bool {
+        archivedMessageIDs.contains(msg.id)
+    }
+
+    func archive(_ msg: MessageData) {
+        archivedMessageIDs.insert(msg.id)
+        saveArchiveToDisk()
+    }
+
+    func unarchive(_ msg: MessageData) {
+        archivedMessageIDs.remove(msg.id)
+        saveArchiveToDisk()
     }
 
     // MARK: - 增量同步 (启动/进页面时调)

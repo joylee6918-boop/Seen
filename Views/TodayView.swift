@@ -644,7 +644,7 @@ private struct HealthMetricTile: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
             Spacer(minLength: 0)
-            CardAccentBlock(color: type.main, background: type.bg)
+            MiniTrendLine(color: type.main, background: type.bg)
                 .frame(height: 30)
         }
         .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
@@ -698,7 +698,7 @@ private struct ActivityActionTile: View {
                 .foregroundColor(.gTextWeak)
             Spacer(minLength: 0)
             HStack(spacing: 8) {
-                CardAccentBlock(color: type.main, background: type.bg)
+                MiniTrendLine(color: type.main, background: type.bg)
                     .frame(height: 30)
                 if let cancelTitle, let cancelAction {
                     Button(action: cancelAction) {
@@ -902,26 +902,48 @@ private struct Ring: View {
     }
 }
 
-private struct CardAccentBlock: View {
+private struct MiniTrendLine: View {
     let color: Color
     let background: Color
 
+    private let points: [CGFloat] = [0.54, 0.42, 0.68, 0.50, 0.62, 0.57, 0.74]
+
     var body: some View {
-        HStack(alignment: .bottom, spacing: 4) {
-            ForEach([0.28, 0.52, 0.78, 0.46, 0.66], id: \.self) { ratio in
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(color)
-                    .frame(width: 5, height: 18 * ratio)
+        GeometryReader { proxy in
+            let insetX: CGFloat = 10
+            let insetY: CGFloat = 7
+            let width = max(proxy.size.width - insetX * 2, 1)
+            let height = max(proxy.size.height - insetY * 2, 1)
+            let step = width / CGFloat(max(points.count - 1, 1))
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(background.opacity(0.55))
+
+                Path { path in
+                    for index in points.indices {
+                        let x = insetX + CGFloat(index) * step
+                        let y = insetY + height - points[index] * height
+                        if index == 0 {
+                            path.move(to: CGPoint(x: x, y: y))
+                        } else {
+                            path.addLine(to: CGPoint(x: x, y: y))
+                        }
+                    }
+                }
+                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+
+                ForEach(points.indices, id: \.self) { index in
+                    let x = insetX + CGFloat(index) * step
+                    let y = insetY + height - points[index] * height
+                    Circle()
+                        .fill(index == points.indices.last ? color : Color.gSurface)
+                        .overlay(Circle().stroke(color, lineWidth: 2.5))
+                        .frame(width: index == points.indices.last ? 8 : 7, height: index == points.indices.last ? 8 : 7)
+                        .position(x: x, y: y)
+                }
             }
-            Spacer(minLength: 0)
-            Circle().fill(color.opacity(0.45)).frame(width: 5, height: 5)
-            Circle().fill(color.opacity(0.28)).frame(width: 5, height: 5)
-            Circle().fill(color.opacity(0.18)).frame(width: 5, height: 5)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(background.opacity(0.72))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

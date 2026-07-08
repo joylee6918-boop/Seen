@@ -14,6 +14,7 @@ struct AIView: View {
     @State private var hrv: Double?
     @State private var sleepHours: Double?
     @State private var sleepStages: (deep: Double, core: Double, rem: Double, awake: Double)?
+    @State private var showArchived = false
 
     private let calendar = Calendar.current
 
@@ -87,16 +88,57 @@ struct AIView: View {
     }
 
     private var repliesSection: some View {
-        ReplySection(title: "依安给你的回声", messages: replyMessages)
+        VStack(alignment: .leading, spacing: 12) {
+            ReplySection(
+                title: "依安给你的回声",
+                messages: activeReplyMessages,
+                emptyText: "还没有新的回信。等你记录一点，依安会在这里回应你。",
+                archiveTitle: "归档",
+                archiveAction: { messageStore.archive($0) }
+            )
+            if !archivedReplyMessages.isEmpty {
+                DisclosureGroup(isExpanded: $showArchived) {
+                    VStack(spacing: 10) {
+                        ForEach(archivedReplyMessages) { msg in
+                            ReplyCard(
+                                msg: msg,
+                                archiveTitle: "移回",
+                                archiveAction: { messageStore.unarchive($0) }
+                            )
+                        }
+                    }
+                    .padding(.top, 8)
+                } label: {
+                    HStack {
+                        Text("已归档")
+                            .font(.gCaption)
+                            .foregroundColor(.gTextBody)
+                        Text("\(archivedReplyMessages.count)")
+                            .font(.gCaption)
+                            .foregroundColor(.gTextSecondary)
+                    }
+                    .padding(.leading, 2)
+                }
+                .tint(.gTextSecondary)
+            }
+        }
     }
 
-    private var replyMessages: [MessageData] {
+    private var sortedReplyMessages: [MessageData] {
         messageStore.history.sorted { lhs, rhs in
             if let l = parsedDate(lhs.createdAt), let r = parsedDate(rhs.createdAt) {
                 return l > r
             }
             return lhs.id > rhs.id
         }
+    }
+
+    private var activeReplyMessages: [MessageData] {
+        sortedReplyMessages.filter { !messageStore.isArchived($0) }
+    }
+
+    private var archivedReplyMessages: [MessageData] {
+        sortedReplyMessages.filter { messageStore.isArchived($0) }
     }
 
     private func parsedDate(_ iso: String?) -> Date? {
@@ -110,6 +152,9 @@ struct AIView: View {
     private struct ReplySection: View {
         let title: String
         let messages: [MessageData]
+        let emptyText: String
+        let archiveTitle: String
+        let archiveAction: (MessageData) -> Void
 
         var body: some View {
             VStack(alignment: .leading, spacing: 10) {
@@ -118,7 +163,7 @@ struct AIView: View {
                     .foregroundColor(.gTextBody)
                     .padding(.leading, 2)
                 if messages.isEmpty {
-                    Text("还没有新的回信。等你记录一点，依安会在这里回应你。")
+                    Text(emptyText)
                         .font(.gCaption)
                         .foregroundColor(.gTextBody)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -128,7 +173,7 @@ struct AIView: View {
                         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gHairline, lineWidth: 1))
                 } else {
                     ForEach(messages) { msg in
-                        ReplyCard(msg: msg)
+                        ReplyCard(msg: msg, archiveTitle: archiveTitle, archiveAction: archiveAction)
                     }
                 }
             }
@@ -137,6 +182,8 @@ struct AIView: View {
 
     private struct ReplyCard: View {
         let msg: MessageData
+        let archiveTitle: String
+        let archiveAction: (MessageData) -> Void
         @State private var expanded = false
 
         var body: some View {
@@ -160,6 +207,20 @@ struct AIView: View {
                         Text(formatTime(msg.createdAt))
                             .font(.gCaption)
                             .foregroundColor(.gTextSecondary)
+                        Button {
+                            withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+                                archiveAction(msg)
+                            }
+                        } label: {
+                            Text(archiveTitle)
+                                .font(.gCaption)
+                                .foregroundColor(.gTextSecondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.gBg)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
                     }
                     HStack(spacing: 6) {
                         Text(msg.readAt == nil ? "未读" : "已读")
