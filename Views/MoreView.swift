@@ -328,7 +328,7 @@ struct InspirationListView: View {
                             .background(selectedCategory == c ? c.color.bg : Color.gSurface)
                             .foregroundColor(selectedCategory == c ? c.color.main : .gTextSecondary)
                             .clipShape(Capsule())
-                            .overlay(Capsule().stroke(selectedCategory == c ? c.color.main : Color.gHairline, lineWidth: 1))
+                            .overlay(Capsule().stroke(selectedCategory == c ? c.color.main.opacity(0.28) : Color.gHairline, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -346,7 +346,7 @@ struct InspirationListView: View {
                         .background(selectedPriority == p ? Color.dIdeaBg : Color.gSurface)
                         .foregroundColor(selectedPriority == p ? .dIdea : .gTextSecondary)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(selectedPriority == p ? Color.dIdea : Color.clear, lineWidth: 1))
+                        .overlay(Capsule().stroke(selectedPriority == p ? Color.dIdea.opacity(0.24) : Color.clear, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -427,9 +427,13 @@ private struct InspirationRow: View {
             Spacer()
         }
         .padding(15)
-        .background(item.category.color.bg.opacity(0.55))
+        .background(Color.gSurface)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(item.category.color.main.opacity(0.16), lineWidth: 1)
+        )
+        .shadow(color: Color.gTextPrimary.opacity(0.035), radius: 8, x: 0, y: 3)
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { onDelete() } label: { Label("删除", systemImage: "trash") }
         }

@@ -5,8 +5,8 @@ import SwiftUI
 
 extension Color {
     // MARK: 基础色
-    /// 暖绿灰页面背景
-    static let gBg       = Color(red: 0xF4/255, green: 0xF6/255, blue: 0xEA/255)
+    /// 中性暖灰米白页面背景
+    static let gBg       = Color(red: 0xF7/255, green: 0xF5/255, blue: 0xF0/255)
     /// 普通卡片底
     static let gSurface  = Color(red: 0xFF/255, green: 0xFD/255, blue: 0xF7/255)
     /// AI/重点卡片底
@@ -67,9 +67,9 @@ extension Color {
     // 咖啡 · 棕金
     static let dCoffeeBg = Color(red: 0xF5/255, green: 0xEC/255, blue: 0xDF/255)
     static let dCoffee   = Color(red: 0xC9/255, green: 0xA2/255, blue: 0x7A/255)
-    // 灵感 · 温橙
-    static let dIdeaBg   = Color(red: 0xFE/255, green: 0xE9/255, blue: 0xD7/255)
-    static let dIdea     = Color(red: 0xF9/255, green: 0xA1/255, blue: 0x5A/255)
+    // 灵感 · 淡薰衣草
+    static let dIdeaBg   = Color(red: 0xED/255, green: 0xE8/255, blue: 0xF4/255)
+    static let dIdea     = Color(red: 0x90/255, green: 0x83/255, blue: 0xAF/255)
     // AI 陪伴 / 同步 · 薰衣草
     static let dAiBg     = gSelectedBg
     static let dAi       = dHrv
