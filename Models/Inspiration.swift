@@ -46,7 +46,7 @@ final class Inspiration {
         var color: DataType {
             switch self {
             case .spark: return .idea
-            case .todo: return .habit
+            case .todo: return .sleep
             case .bug: return .heart
             }
         }

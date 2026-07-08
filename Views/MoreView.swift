@@ -343,10 +343,10 @@ struct InspirationListView: View {
                             Text(p.emoji); Text(p.rawValue).font(.gCaption)
                         }
                         .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(selectedPriority == p ? Color.dIdeaBg : Color.gSurface)
-                        .foregroundColor(selectedPriority == p ? .dIdea : .gTextSecondary)
+                        .background(selectedPriority == p ? p.backgroundColor : Color.gSurface)
+                        .foregroundColor(selectedPriority == p ? p.color : .gTextSecondary)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(selectedPriority == p ? Color.dIdea.opacity(0.24) : Color.clear, lineWidth: 1))
+                        .overlay(Capsule().stroke(selectedPriority == p ? p.color.opacity(0.28) : Color.clear, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -365,7 +365,7 @@ struct InspirationListView: View {
             Text(title).font(.gH3).foregroundColor(.gTextPrimary)
             Text("\(count)").font(.gCaption)
                 .padding(.horizontal, 7).padding(.vertical, 2)
-                .background(Color.dIdeaBg).foregroundColor(.dIdea)
+                .background(Color.dSleepBg).foregroundColor(.dSleep)
                 .clipShape(Capsule())
         }
     }
@@ -403,10 +403,10 @@ private struct InspirationRow: View {
         HStack(alignment: .top, spacing: 12) {
             Button { onToggle() } label: {
                 ZStack {
-                    Circle().stroke(item.isCompleted ? Color.dIdea : Color.gHairline, lineWidth: 1.5)
+                    Circle().stroke(item.isCompleted ? item.category.color.main : Color.gHairline, lineWidth: 1.5)
                         .frame(width: 24, height: 24)
                     if item.isCompleted {
-                        Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundColor(.dIdea)
+                        Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundColor(item.category.color.main)
                     }
                 }
             }
@@ -420,7 +420,7 @@ private struct InspirationRow: View {
                     Label(item.category.rawValue, systemImage: item.category.icon)
                         .font(.gCaption)
                         .foregroundColor(item.category.color.main)
-                    Text(item.priority.emoji + " " + item.priority.rawValue).font(.gCaption).foregroundColor(.gTextSecondary)
+                    Text(item.priority.emoji + " " + item.priority.rawValue).font(.gCaption).foregroundColor(item.priority.color)
                     Text(item.createdAt.formatted(.dateTime.month().day())).font(.gCaption).foregroundColor(.gTextSecondary)
                 }
             }
@@ -436,6 +436,24 @@ private struct InspirationRow: View {
         .shadow(color: Color.gTextPrimary.opacity(0.035), radius: 8, x: 0, y: 3)
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { onDelete() } label: { Label("删除", systemImage: "trash") }
+        }
+    }
+}
+
+private extension Inspiration.Priority {
+    var color: Color {
+        switch self {
+        case .normal: return .dSleep
+        case .important: return .dIdea
+        case .urgent: return .dHeart
+        }
+    }
+
+    var backgroundColor: Color {
+        switch self {
+        case .normal: return .dSleepBg
+        case .important: return .dIdeaBg
+        case .urgent: return .dHeartBg
         }
     }
 }
