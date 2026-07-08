@@ -198,10 +198,10 @@ struct AIView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(triggerLabel)
                             .font(.gCaption)
-                            .foregroundColor(.dAi)
+                            .foregroundColor(.gTextBody)
                             .padding(.horizontal, 9)
                             .padding(.vertical, 4)
-                            .background(Color.dAiBg.opacity(0.75))
+                            .background(Color.gBg)
                             .clipShape(Capsule())
                         Spacer(minLength: 8)
                         Text(formatTime(msg.createdAt))
@@ -225,10 +225,10 @@ struct AIView: View {
                     HStack(spacing: 6) {
                         Text(msg.readAt == nil ? "未读" : "已读")
                             .font(.gCaption)
-                            .foregroundColor(msg.readAt == nil ? .dAi : .gSuccess)
+                            .foregroundColor(msg.readAt == nil ? .gTextBody : .gSuccess)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(msg.readAt == nil ? Color.dAiBg.opacity(0.75) : Color.dMoveBg.opacity(0.8))
+                            .background(msg.readAt == nil ? Color.gBg : Color.dMoveBg.opacity(0.8))
                             .clipShape(Capsule())
                         if let readAt = msg.readAt {
                             Text("你在 \(formatTime(readAt)) 看过")

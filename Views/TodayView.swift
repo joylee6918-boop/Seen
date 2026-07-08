@@ -847,7 +847,7 @@ private struct ActivityRingMetricTile: View {
             }
             HStack(alignment: .center, spacing: 12) {
                 ActivityRings(kcal: kcal, exerciseMinutes: exerciseMinutes, standHours: standHours)
-                    .frame(width: 64, height: 64)
+                    .frame(width: 72, height: 72)
                 VStack(alignment: .leading, spacing: 2) {
                     RingMetricText(text: "\(kcalText)/300 千卡", color: .dEnergy)
                     RingMetricText(text: "\(exerciseText)/30 分钟", color: .dMove)
@@ -889,11 +889,14 @@ private struct ActivityRings: View {
 
     var body: some View {
         ZStack {
+            Circle()
+                .fill(Color(red: 0x1F/255, green: 0x20/255, blue: 0x24/255))
+                .shadow(color: Color.black.opacity(0.16), radius: 5, x: 0, y: 2)
             Ring(progress: progress(kcal, goal: 300), color: .dEnergy, lineWidth: 9, inset: 0)
             Ring(progress: progress(exerciseMinutes, goal: 30), color: .dMove, lineWidth: 9, inset: 13)
             Ring(progress: progress(standHours, goal: 8), color: .dSleep, lineWidth: 9, inset: 26)
         }
-        .padding(2)
+        .padding(7)
     }
 
     private func progress(_ value: Double?, goal: Double) -> Double {
@@ -912,13 +915,13 @@ private struct Ring: View {
         ZStack {
             Circle()
                 .inset(by: inset)
-                .stroke(color.opacity(0.16), lineWidth: lineWidth)
+                .stroke(Color.white.opacity(0.13), lineWidth: lineWidth)
             Circle()
                 .inset(by: inset)
                 .trim(from: 0, to: progress)
                 .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
                 .rotationEffect(.degrees(-90))
-                .shadow(color: color.opacity(0.24), radius: 2.5, x: 0, y: 1)
+                .shadow(color: color.opacity(0.32), radius: 2.5, x: 0, y: 1)
         }
     }
 }
