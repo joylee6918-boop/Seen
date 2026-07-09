@@ -64,7 +64,7 @@ class HealthManager: ObservableObject {
                 guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: nil); return }
                 // 睡眠只信 Apple Watch. 如果昨晚没戴表, 不回退到手机/第三方/手填样本,
                 // 否则会把不可靠的睡眠时长同步给 Claude.
-                let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
+                let watch = self.trustedSleepSamples(from: s)
                 guard !watch.isEmpty else { cont.resume(returning: nil); return }
                 let toUse = watch
                 // 取 asleep 样本 (有细分用细分, 没有回退 unspecified)
@@ -120,7 +120,7 @@ class HealthManager: ObservableObject {
                                   sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]) { _, samples, e in
                 if let e = e { cont.resume(throwing: e); return }
                 guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: nil); return }
-                let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
+                let watch = self.trustedSleepSamples(from: s)
                 guard !watch.isEmpty else { cont.resume(returning: nil); return }
                 let toUse = watch
                 // 找最近一夜的 asleep 范围 (跟 fetchLastNightSleep 同逻辑)
@@ -185,7 +185,7 @@ class HealthManager: ObservableObject {
             let q = HKSampleQuery(sampleType: t, predicate: p, limit: HKObjectQueryNoLimit,
                                   sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, samples, _ in
                 guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: []); return }
-                let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
+                let watch = self.trustedSleepSamples(from: s)
                 guard !watch.isEmpty else { cont.resume(returning: []); return }
                 let toUse = watch
                 let detailed: Set<Int> = [
@@ -431,7 +431,7 @@ class HealthManager: ObservableObject {
                                   sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, samples, e in
                 if let e = e { cont.resume(throwing: e); return }
                 guard let s = samples as? [HKCategorySample], !s.isEmpty else { cont.resume(returning: nil); return }
-                let watch = s.filter { $0.sourceRevision.source.bundleIdentifier.contains("watch") }
+                let watch = self.trustedSleepSamples(from: s)
                 guard !watch.isEmpty else { cont.resume(returning: nil); return }
                 let asleep = watch.filter { $0.value == HKCategoryValueSleepAnalysis.asleepCore.rawValue
                     || $0.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue
@@ -594,6 +594,55 @@ class HealthManager: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    nonisolated private func trustedSleepSamples(from samples: [HKCategorySample]) -> [HKCategorySample] {
+        let trustedSources = Set(samples.filter { isAppleWatchSample($0) || isDetailedAsleepSample($0) }
+            .map(sleepSourceKey))
+        guard !trustedSources.isEmpty else { return [] }
+
+        return samples.filter { sample in
+            trustedSources.contains(sleepSourceKey(sample)) && isSleepDurationSample(sample)
+        }
+    }
+
+    nonisolated private func isAppleWatchSample(_ sample: HKCategorySample) -> Bool {
+        let revision = sample.sourceRevision
+        let device = sample.device
+        let fields = [
+            revision.source.name,
+            revision.source.bundleIdentifier,
+            revision.productType ?? "",
+            device?.name ?? "",
+            device?.model ?? "",
+            device?.manufacturer ?? ""
+        ]
+        return fields.contains { $0.localizedCaseInsensitiveContains("watch") }
+    }
+
+    nonisolated private func isDetailedAsleepSample(_ sample: HKCategorySample) -> Bool {
+        sample.value == HKCategoryValueSleepAnalysis.asleepCore.rawValue ||
+        sample.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue ||
+        sample.value == HKCategoryValueSleepAnalysis.asleepREM.rawValue
+    }
+
+    nonisolated private func isSleepDurationSample(_ sample: HKCategorySample) -> Bool {
+        sample.value == HKCategoryValueSleepAnalysis.asleepCore.rawValue ||
+        sample.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue ||
+        sample.value == HKCategoryValueSleepAnalysis.asleepREM.rawValue ||
+        sample.value == HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue ||
+        sample.value == HKCategoryValueSleepAnalysis.awake.rawValue
+    }
+
+    nonisolated private func sleepSourceKey(_ sample: HKCategorySample) -> String {
+        let revision = sample.sourceRevision
+        return [
+            revision.source.bundleIdentifier,
+            revision.source.name,
+            revision.productType ?? "",
+            sample.device?.localIdentifier ?? "",
+            sample.device?.model ?? ""
+        ].joined(separator: "|")
+    }
 
     private func todayRange() -> (Date, Date) {
         let cal = Calendar.current

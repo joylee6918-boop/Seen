@@ -379,7 +379,10 @@ struct InspirationListView: View {
         newText = ""; isInputFocused = false
     }
     private func completeItem(_ item: Inspiration) {
-        item.isCompleted = true; item.completedAt = Date()
+        withAnimation(.spring()) {
+            item.isCompleted = true; item.completedAt = Date()
+            showCompleted = true
+        }
         try? modelContext.save()
         Task { if let r = try? await CloudSync.shared.syncInspiration(item) { messageStore.apply(r) } }
     }
@@ -403,10 +406,17 @@ private struct InspirationRow: View {
         HStack(alignment: .top, spacing: 12) {
             Button { onToggle() } label: {
                 ZStack {
-                    Circle().stroke(item.isCompleted ? item.category.color.main : Color.gHairline, lineWidth: 1.5)
-                        .frame(width: 24, height: 24)
                     if item.isCompleted {
-                        Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundColor(item.category.color.main)
+                        Circle()
+                            .fill(item.category.color.main)
+                            .frame(width: 24, height: 24)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                    } else {
+                        Circle()
+                            .stroke(Color.gHairline, lineWidth: 1.5)
+                            .frame(width: 24, height: 24)
                     }
                 }
             }

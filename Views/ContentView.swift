@@ -27,25 +27,23 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             TodayView()
-                .tabItem { Label("今天", systemImage: "house") }
+                .tabItem { Label("今天", systemImage: "sun.max.fill") }
                 .tag(0)
 
             BodyView()
-                .tabItem { Label("身体", systemImage: "heart.text.square") }
+                .tabItem { Label("身体", systemImage: "figure.arms.open") }
                 .tag(1)
 
-            AIView()
-                .tabItem { Label("关心", systemImage: "sparkles") }
+            RecordView()
+                .tabItem { Label("记录", systemImage: "heart.text.square.fill") }
                 .tag(2)
 
-            NavigationStack {
-                InspirationListView()
-            }
-                .tabItem { Label("洞悉", systemImage: "lightbulb") }
+            AIView()
+                .tabItem { Label("关心", systemImage: "heart.circle.fill") }
                 .tag(3)
 
             MoreView()
-                .tabItem { Label("我的", systemImage: "person.crop.circle") }
+                .tabItem { Label("我的", systemImage: "person.crop.circle.fill") }
                 .tag(4)
         }
         .tint(Color.dAi)
