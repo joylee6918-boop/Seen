@@ -57,7 +57,7 @@ struct MoreView: View {
             Image(systemName: "person.crop.circle.fill")
                 .font(.system(size: 56)).foregroundColor(.dAi)
             Text("阿芸").font(.gH2)
-            Text("记录生活，遇见更好的自己")
+            Text("你过日子，我看着你")
                 .font(.gCaption).foregroundColor(.gTextSecondary)
             HStack(spacing: 24) {
                 StatBadge(value: "\(moods.count)", label: "心情")
@@ -100,7 +100,7 @@ struct MoreView: View {
                 Task { await syncAll() }
             } label: {
                 Row(icon: "arrow.triangle.2.circlepath", color: .dAi,
-                    title: "立即同步", trailing: isSyncing ? "同步中..." : nil)
+                    title: "立即同步", trailing: isSyncing ? "正在送过去…" : nil)
             }
             .buttonStyle(.plain)
             NavigationLink {
@@ -118,7 +118,7 @@ struct MoreView: View {
                 Task { await syncAll() }
             } label: {
                 Row(icon: "icloud.and.arrow.up", color: cloudUploadsEnabled ? .gSuccess : .gTextSecondary,
-                    title: "云端同步", trailing: isSyncing ? "同步中..." : syncTrailingText)
+                    title: "云端同步", trailing: isSyncing ? "正在送过去…" : syncTrailingText)
             }
             .buttonStyle(.plain)
             Button {

@@ -131,7 +131,7 @@ private struct ReactionBanner: View {
                 .foregroundColor(.gTextBody)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
             Button(action: onTap) {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .bold))
@@ -143,9 +143,9 @@ private struct ReactionBanner: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(Color.gSurface.opacity(0.96))
-        .clipShape(Capsule())
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
-            Capsule()
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(Color.gHairline, lineWidth: 1)
         )
         .shadow(color: Color.gTextPrimary.opacity(0.07), radius: 10, x: 0, y: 3)

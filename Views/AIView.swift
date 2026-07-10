@@ -92,7 +92,7 @@ struct AIView: View {
             ReplySection(
                 title: "依安给你的回声",
                 messages: activeReplyMessages,
-                emptyText: "还没有新的回信。等你记录一点，依安会在这里回应你。",
+                emptyText: "这里还空着。你放下一点什么，我就接一点什么。",
                 archiveTitle: "归档",
                 archiveAction: { messageStore.archive($0) }
             )

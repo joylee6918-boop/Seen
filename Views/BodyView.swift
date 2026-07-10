@@ -39,7 +39,7 @@ struct BodyView: View {
             Text(statusDetail)
                 .font(.gBody)
                 .foregroundColor(.gTextBody)
-            Text(snapshot.updatedAt.map { "数据更新于 \(clock($0))" } ?? "正在读取 HealthKit")
+            Text(snapshot.updatedAt.map { "数据更新于 \(clock($0))" } ?? "正在看你的身体信号")
                 .font(.gCaption)
                 .foregroundColor(.gTextSecondary)
         }
@@ -86,7 +86,7 @@ struct BodyView: View {
                           value: snapshot.sleepHeartRate.map { "\(Int($0.rounded()))" } ?? "--",
                           unit: "bpm",
                           status: snapshot.sleepHeartRate == nil ? "无数据" : "正常",
-                          comparison: snapshot.sleepHeartRate == nil ? "需要昨晚 Apple Watch 睡眠样本" : "昨晚睡眠区间平均",
+                          comparison: snapshot.sleepHeartRate == nil ? "昨晚手表没记到你睡觉" : "昨晚睡眠区间平均",
                           dateText: "昨晚")
             BodyMetricRow(type: .hrv,
                           title: "HRV",

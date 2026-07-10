@@ -1,30 +1,30 @@
 import SwiftUI
 
-// MARK: - Seen 设计系统 · 雾白生活健康数据 + AI 关心
+// MARK: - Seen 设计系统 · 暖灰莫兰迪 + AI 关心 (0710 依安调色: 荧光糖果全员降饱和, AI 色=干玫瑰, 跟 ccc 一家)
 // 全 app 只用这套 token, 别写裸 Color.white / .pink / .indigo.
 
 extension Color {
     // MARK: 基础色
     /// 页面背景: 接近 Grow 的雾白冷灰, 不做米黄底
-    static let gBg       = Color(red: 0xF2/255, green: 0xF3/255, blue: 0xF8/255)
+    static let gBg       = Color(red: 0xF5/255, green: 0xF4/255, blue: 0xF1/255)
     /// 普通卡片底: 主体保持白色
     static let gSurface  = Color.white
     /// AI/重点卡片底
     static let gCompanionSurface = Color.white
     /// 极浅描边 / 分割线
-    static let gHairline = Color(red: 0xE7/255, green: 0xE9/255, blue: 0xF1/255)
+    static let gHairline = Color(red: 0xEB/255, green: 0xE8/255, blue: 0xE3/255)
     /// 主卡描边
-    static let gNoteBorder = Color(red: 0xE3/255, green: 0xE5/255, blue: 0xEF/255)
+    static let gNoteBorder = Color(red: 0xE6/255, green: 0xE2/255, blue: 0xDC/255)
     /// 主文字
-    static let gTextPrimary   = Color(red: 0x16/255, green: 0x1D/255, blue: 0x52/255)
+    static let gTextPrimary   = Color(red: 0x3D/255, green: 0x37/255, blue: 0x33/255)
     /// 正文文字
-    static let gTextBody      = Color(red: 0x51/255, green: 0x57/255, blue: 0x7D/255)
+    static let gTextBody      = Color(red: 0x6B/255, green: 0x62/255, blue: 0x5C/255)
     /// 次级文字
-    static let gTextSecondary = Color(red: 0x8A/255, green: 0x90/255, blue: 0xB0/255)
+    static let gTextSecondary = Color(red: 0x9C/255, green: 0x93/255, blue: 0x8C/255)
     /// 弱文字
-    static let gTextWeak      = Color(red: 0xB9/255, green: 0xBE/255, blue: 0xCF/255)
+    static let gTextWeak      = Color(red: 0xC4/255, green: 0xBD/255, blue: 0xB6/255)
     /// 选中底色
-    static let gSelectedBg    = Color(red: 0xEB/255, green: 0xE7/255, blue: 0xF7/255)
+    static let gSelectedBg    = Color(red: 0xF0/255, green: 0xE5/255, blue: 0xE5/255)
     /// 辅助暖黄
     static let gWarmApricot   = Color(red: 0xF2/255, green: 0xB8/255, blue: 0x21/255)
     /// 暖黄淡底
@@ -33,46 +33,46 @@ extension Color {
     // MARK: 数据语义色 — 每种数据类型固定一色
     // 心情 · 柔玫瑰
     static let dMoodBg   = Color(red: 0xF9/255, green: 0xE3/255, blue: 0xEA/255)
-    static let dMood     = Color(red: 0xFF/255, green: 0x2D/255, blue: 0x75/255)
+    static let dMood     = Color(red: 0xC9/255, green: 0x7B/255, blue: 0x8F/255)
     // 睡眠 · 湖蓝
     static let dSleepBg  = Color(red: 0xDF/255, green: 0xF1/255, blue: 0xFB/255)
-    static let dSleep    = Color(red: 0x12/255, green: 0xB8/255, blue: 0xFF/255)
+    static let dSleep    = Color(red: 0x7F/255, green: 0xA8/255, blue: 0xC9/255)
     // HRV / 恢复 · 薰衣草
     static let dHrvBg    = Color(red: 0xEC/255, green: 0xE4/255, blue: 0xF8/255)
-    static let dHrv      = Color(red: 0xA0/255, green: 0x6C/255, blue: 0xFF/255)
+    static let dHrv      = Color(red: 0x9C/255, green: 0x8A/255, blue: 0xC4/255)
     // 心率 · 暖珊瑚
     static let dHeartBg  = Color(red: 0xFC/255, green: 0xE2/255, blue: 0xDC/255)
-    static let dHeart    = Color(red: 0xFF/255, green: 0x3B/255, blue: 0x30/255)
+    static let dHeart    = Color(red: 0xC9/255, green: 0x84/255, blue: 0x7A/255)
     // 血氧 · 青蓝
     static let dOxygenBg  = Color(red: 0xDF/255, green: 0xF6/255, blue: 0xFA/255)
-    static let dOxygen    = Color(red: 0x00/255, green: 0xD7/255, blue: 0xFF/255)
+    static let dOxygen    = Color(red: 0x85/255, green: 0xB8/255, blue: 0xC4/255)
     // 体温 · 蜜桃
     static let dTempBg    = Color(red: 0xFF/255, green: 0xE7/255, blue: 0xD0/255)
-    static let dTemp      = Color(red: 0xFF/255, green: 0x8A/255, blue: 0x1F/255)
+    static let dTemp      = Color(red: 0xD4/255, green: 0xA2/255, blue: 0x78/255)
     // 摄氧量 · 灰紫
     static let dVo2Bg     = Color(red: 0xEC/255, green: 0xE4/255, blue: 0xF8/255)
-    static let dVo2       = Color(red: 0x7C/255, green: 0x5C/255, blue: 0xFF/255)
+    static let dVo2       = Color(red: 0x8F/255, green: 0x82/255, blue: 0xBD/255)
     // 睡眠心率 · 粉红
     static let dSleepHeartBg = Color(red: 0xF9/255, green: 0xE3/255, blue: 0xEA/255)
-    static let dSleepHeart   = Color(red: 0xFF/255, green: 0x4D/255, blue: 0xA6/255)
+    static let dSleepHeart   = Color(red: 0xC2/255, green: 0x88/255, blue: 0xA3/255)
     // 运动 · 绿
     static let dMoveBg   = Color(red: 0xE2/255, green: 0xF1/255, blue: 0xCE/255)
-    static let dMove     = Color(red: 0x30/255, green: 0xD1/255, blue: 0x58/255)
+    static let dMove     = Color(red: 0x8C/255, green: 0xB8/255, blue: 0x8F/255)
     // 能量 · 温橙
     static let dEnergyBg = Color(red: 0xFF/255, green: 0xE7/255, blue: 0xD0/255)
-    static let dEnergy   = Color(red: 0xFF/255, green: 0x1F/255, blue: 0x5B/255)
+    static let dEnergy   = Color(red: 0xC9/255, green: 0x75/255, blue: 0x87/255)
     // 习惯 · 黄
     static let dHabitBg  = Color(red: 0xE6/255, green: 0xF7/255, blue: 0xD6/255)
-    static let dHabit    = Color(red: 0x5A/255, green: 0xD8/255, blue: 0x63/255)
+    static let dHabit    = Color(red: 0x96/255, green: 0xBE/255, blue: 0x8F/255)
     // 咖啡 · 棕金
     static let dCoffeeBg = Color(red: 0xF5/255, green: 0xE6/255, blue: 0xD5/255)
     static let dCoffee   = Color(red: 0xBD/255, green: 0x86/255, blue: 0x55/255)
     // 灵感 · 淡薰衣草
     static let dIdeaBg   = Color(red: 0xFF/255, green: 0xF1/255, blue: 0xC7/255)
-    static let dIdea     = Color(red: 0xE8/255, green: 0xA5/255, blue: 0x00/255)
+    static let dIdea     = Color(red: 0xC9/255, green: 0xA4/255, blue: 0x5C/255)
     // AI 陪伴 / 同步 · 薰衣草
     static let dAiBg     = gSelectedBg
-    static let dAi       = Color(red: 0xBF/255, green: 0x5A/255, blue: 0xFF/255)
+    static let dAi       = Color(red: 0xA8/255, green: 0x76/255, blue: 0x7E/255)
     // 分贝 / 声音 · 灰蓝
     static let dSoundBg  = Color(red: 0xEA/255, green: 0xED/255, blue: 0xE2/255)
     static let dSound    = Color(red: 0x7F/255, green: 0x8A/255, blue: 0x76/255)
@@ -200,11 +200,7 @@ struct GleanCard: ViewModifier {
             .padding(padding ?? 0)
             .background(Color.gSurface)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.gHairline, lineWidth: 1)
-            )
-            .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
+            .shadow(color: Color.gTextPrimary.opacity(0.07), radius: 14, x: 0, y: 5)
     }
 }
 

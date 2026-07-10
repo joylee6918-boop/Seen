@@ -130,7 +130,7 @@ struct TrendView: View {
                 .frame(height: 140)
                 .softChartAxes()
             } else {
-                EmptyHint(text: "暂无 HRV 数据")
+                EmptyHint(text: "手表还没把你的心跳交给我")
             }
         }
         .gleanCard()
