@@ -37,15 +37,12 @@ class HealthManager: ObservableObject {
 
     func fetchTodayHRV() async throws -> Double? {
         guard let t = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN) else { return nil }
-        let (start, end) = todayRange()
+        // HRV 与静息心率一样，不保证在凌晨之后才写入 HealthKit。尤其睡眠中的
+        // 测量常带有前一天日期，读取最近一次有效样本更符合“恢复参考”的语义。
+        let start = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        let end = Date()
         let p = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
-        return try await withCheckedThrowingContinuation { cont in
-            let q = HKStatisticsQuery(quantityType: t, quantitySamplePredicate: p, options: .discreteAverage) { _, r, e in
-                if let e = e { cont.resume(throwing: e); return }
-                cont.resume(returning: r?.averageQuantity()?.doubleValue(for: HKUnit.secondUnit(with: .milli)))
-            }
-            self.healthStore.execute(q)
-        }
+        return try await fetchLatestQuantity(t, predicate: p, unit: HKUnit.secondUnit(with: .milli))
     }
 
     /// 拉最近一夜睡眠总时长 (小时). 直接取 Apple Watch 记录的完整 sleep session, 不卡固定窗口 —
@@ -312,16 +309,13 @@ class HealthManager: ObservableObject {
     }
 
     func fetchTodayRestingHeartRate() async throws -> Double? {
-        guard let t = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) ?? HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
-        let (start, end) = todayRange()
+        // 静息心率由 Apple Watch 按自身节奏计算、写入，并不保证在当天零点后
+        // 立刻产生新样本。取最近一周的最新值，避免跨日后整天显示为空。
+        guard let t = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) else { return nil }
+        let start = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        let end = Date()
         let p = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
-        return try await withCheckedThrowingContinuation { cont in
-            let q = HKStatisticsQuery(quantityType: t, quantitySamplePredicate: p, options: .discreteAverage) { _, r, e in
-                if let e = e { cont.resume(throwing: e); return }
-                cont.resume(returning: r?.averageQuantity()?.doubleValue(for: HKUnit(from: "count/min")))
-            }
-            self.healthStore.execute(q)
-        }
+        return try await fetchLatestQuantity(t, predicate: p, unit: HKUnit(from: "count/min"))
     }
 
     func fetchLatestHeartRate() async throws -> Double? {

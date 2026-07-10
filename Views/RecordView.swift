@@ -63,7 +63,7 @@ struct RecordView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.gBg.ignoresSafeArea()
+                SeenBackground()
                 ScrollView {
                     VStack(spacing: 16) {
                         dateHeader
@@ -109,7 +109,7 @@ struct RecordView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: savedTick)
-            .navigationTitle(editingMood == nil ? "跟依安说说现在" : "改一下刚才说的")
+            .navigationTitle(editingMood == nil ? "记录" : "编辑记录")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -165,37 +165,21 @@ struct RecordView: View {
             Text(moodLabel(moodScore))
                 .font(.gCaption).foregroundColor(.dMood)
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 天气
     private var weatherSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(type: .mood, title: "今天天气")
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(DailyMood.Weather.allCases, id: \.self) { w in
-                        Button {
-                            weather = w
-                        } label: {
-                            VStack(spacing: 4) {
-                                Text(w.emoji).font(.title2)
-                                Text(String(w.rawValue.dropFirst(3)))
-                                    .font(.gCaption)
-                                    .foregroundColor(weather == w ? .dMood : .gTextSecondary)
-                            }
-                            .padding(.horizontal, 14).padding(.vertical, 8)
-                            .background(weather == w ? Color.dMoodBg : Color.gBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12)
-                                .stroke(weather == w ? Color.dMood : Color.clear, lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
-                    }
+            Picker("天气", selection: $weather) {
+                ForEach(DailyMood.Weather.allCases, id: \.self) { w in
+                    Text("\(w.emoji) \(String(w.rawValue.dropFirst(3)))").tag(w)
                 }
             }
+            .pickerStyle(.segmented)
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 标签
@@ -221,7 +205,7 @@ struct RecordView: View {
             }
             .padding(10).background(Color.gBg).clipShape(RoundedRectangle(cornerRadius: 10))
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     @ViewBuilder
@@ -253,7 +237,7 @@ struct RecordView: View {
                 .font(.gBody).lineLimit(1...3)
                 .padding(10).background(Color.gBg).clipShape(RoundedRectangle(cornerRadius: 10))
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 睡眠
@@ -270,7 +254,7 @@ struct RecordView: View {
                 .pickerStyle(.segmented).frame(width: 200)
             }
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - HRV
@@ -291,7 +275,7 @@ struct RecordView: View {
                 .font(.gCaption).foregroundColor(.dHrv)
             }
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 运动 (含动作详情)
@@ -335,7 +319,7 @@ struct RecordView: View {
                 .font(.gBody).lineLimit(1...3)
                 .padding(10).background(Color.gBg).clipShape(RoundedRectangle(cornerRadius: 10))
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 经期
@@ -458,7 +442,7 @@ struct RecordView: View {
                 }
             }
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 习惯
@@ -501,7 +485,7 @@ struct RecordView: View {
                 .padding(.vertical, 4)
             }
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 想法
@@ -515,7 +499,7 @@ struct RecordView: View {
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gHairline, lineWidth: 1))
             HStack { Spacer(); Text("\(noteText.count)").font(.gCaption).foregroundColor(.gTextSecondary) }
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 照片
@@ -537,7 +521,7 @@ struct RecordView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
-        .gleanCard()
+        .nativeGroup()
     }
 
     // MARK: - 保存
@@ -758,8 +742,13 @@ private struct SectionHeader: View {
     let title: String
     var body: some View {
         HStack(spacing: 8) {
-            DataIcon(type: type, size: 28)
-            Text(title).font(.gH3)
+            Image(systemName: type.icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(type.main)
+                .frame(width: 28, height: 28)
+                .background(type.bg)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            Text(title).font(.headline)
             Spacer()
         }
     }

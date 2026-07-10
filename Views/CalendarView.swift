@@ -15,7 +15,7 @@ struct CalendarView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.gBg.ignoresSafeArea()
+                SeenBackground()
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -84,10 +84,9 @@ struct CalendarView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.04), radius: 8, x: 0, y: 3)
+        .seenCardElevation()
     }
 
     // MARK: - 月历网格
@@ -122,10 +121,9 @@ struct CalendarView: View {
             }
         }
         .padding(16)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.04), radius: 8, x: 0, y: 3)
+        .seenCardElevation()
     }
 
     // MARK: - 本月统计
@@ -160,10 +158,9 @@ struct CalendarView: View {
             }
         }
         .padding(16)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.04), radius: 8, x: 0, y: 3)
+        .seenCardElevation()
     }
 
     // MARK: - 睡眠趋势图
@@ -204,10 +201,9 @@ struct CalendarView: View {
             }
         }
         .padding(16)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.04), radius: 8, x: 0, y: 3)
+        .seenCardElevation()
     }
 
     // MARK: - HRV 趋势图
@@ -243,10 +239,9 @@ struct CalendarView: View {
             }
         }
         .padding(16)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.04), radius: 8, x: 0, y: 3)
+        .seenCardElevation()
     }
 
     // MARK: - 辅助方法

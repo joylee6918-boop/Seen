@@ -25,7 +25,7 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.gBg.ignoresSafeArea()
+                SeenBackground()
                 ScrollView {
                     VStack(spacing: 16) {
                         header
@@ -131,9 +131,9 @@ struct TodayView: View {
             }
         }
         .padding(18)
-        .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .seenCardElevation()
     }
 
     // MARK: - 健康数据核对
@@ -151,8 +151,8 @@ struct TodayView: View {
                                      detail: healthSnapshot.sleepHours == nil ? "Apple Watch 无睡眠样本" : sleepCardSub)
                     HealthMetricTile(type: .heart,
                                      title: "静息心率",
-                                     value: healthSnapshot.heartRate.map { "\(Int($0)) bpm" } ?? "无数据",
-                                     detail: "HealthKit 今日平均")
+                                     value: healthSnapshot.heartRate.map { "\(Int($0)) bpm" } ?? "—",
+                                     detail: "HealthKit 最近一次记录")
                 }
             }
             VStack(alignment: .leading, spacing: 12) {
@@ -164,11 +164,11 @@ struct TodayView: View {
                                      detail: "今日累计")
                     HealthMetricTile(type: .energy,
                                      title: "消耗卡路里",
-                                     value: healthSnapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "无数据",
+                                     value: healthSnapshot.activeKcal.map { "\(Int($0)) kcal" } ?? "—",
                                      detail: "今日累计")
                     HealthMetricTile(type: .heart,
                                      title: "最新心率",
-                                     value: healthSnapshot.latestHeartRate.map { "\(Int($0)) bpm" } ?? "无数据",
+                                     value: healthSnapshot.latestHeartRate.map { "\(Int($0)) bpm" } ?? "—",
                                      detail: "近 24 小时最新样本")
                     ActivityRingMetricTile(kcal: healthSnapshot.activeKcal,
                                            exerciseMinutes: healthSnapshot.exerciseMinutes,
@@ -200,23 +200,23 @@ struct TodayView: View {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 MealCheckButton(title: "早饭",
                                 icon: "cup.and.saucer.fill",
-                                color: .dCoffee,
-                                background: .dCoffeeBg,
+                                color: .dAi,
+                                background: .dAiBg,
                                 done: hasMeal("早")) { toggleMeal("早") }
                 MealCheckButton(title: "午饭",
                                 icon: "leaf.fill",
-                                color: Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255),
-                                background: Color(red: 0xE4/255, green: 0xF8/255, blue: 0xE9/255),
+                                color: .dAi,
+                                background: .dAiBg,
                                 done: hasMeal("午")) { toggleMeal("午") }
                 MealCheckButton(title: "晚饭",
                                 icon: "fork.knife",
-                                color: Color(red: 0xFF/255, green: 0x6B/255, blue: 0x3D/255),
-                                background: Color(red: 0xFF/255, green: 0xE7/255, blue: 0xD8/255),
+                                color: .dAi,
+                                background: .dAiBg,
                                 done: hasMeal("晚")) { toggleMeal("晚") }
                 MealCheckButton(title: "加餐",
                                 icon: "takeoutbag.and.cup.and.straw.fill",
-                                color: Color(red: 0xFF/255, green: 0x4D/255, blue: 0xA6/255),
-                                background: Color(red: 0xFF/255, green: 0xE3/255, blue: 0xF0/255),
+                                color: .dAi,
+                                background: .dAiBg,
                                 done: hasMeal("加")) { toggleMeal("加") }
             }
         }
@@ -244,9 +244,9 @@ struct TodayView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 12, x: 0, y: 5)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .seenCardElevation()
     }
 
     // MARK: - 快捷打卡
@@ -481,6 +481,13 @@ struct TodayView: View {
             checkIns: todayCheckIns,
             periodDay: periodDay
         ))
+        SeenWidgetSnapshotStore.save(SeenWidgetSnapshot(
+            updatedAt: healthSnapshot.lastUpdated ?? .now,
+            headline: widgetHeadline,
+            sleepHours: healthSnapshot.sleepHours,
+            hrv: healthSnapshot.hrv,
+            restingHeartRate: healthSnapshot.heartRate
+        ))
     }
 
     private func scheduleToastDismiss() {
@@ -506,6 +513,13 @@ struct TodayView: View {
     }
     private var subGreeting: String {
         "依安刚刚看过你的状态"
+    }
+    private var widgetHeadline: String {
+        if healthSnapshot.sleepHours == nil { return "昨晚没有睡眠数据" }
+        if let sleep = healthSnapshot.sleepHours, sleep < 6 { return "今天记得早点休息" }
+        if let hrv = healthSnapshot.hrv, hrv < 35 { return "今天少消耗一点" }
+        if let mood = todayMood?.moodScore, mood <= 4 { return "今天对自己温柔一点" }
+        return "今天也要照顾好自己"
     }
     private var companionText: String {
         if let summary = messageStore.todaySummary, !summary.isEmpty {
@@ -636,38 +650,40 @@ private struct HealthMetricTile: View {
     let detail: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 7) {
                 Image(systemName: type.icon)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(type.main)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 32, height: 32)
                     .background(type.bg)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 Text(title)
                     .font(.gCaption)
-                    .foregroundColor(.gTextSecondary)
+                    .foregroundColor(.gTextBody)
                     .lineLimit(1)
             }
             Text(value)
-                .font(.system(size: 25, weight: .semibold))
+                .font(.system(size: 27, weight: .semibold))
                 .foregroundColor(.gTextPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
-            Text(detail)
-                .font(.gCaption)
-                .foregroundColor(.gTextWeak)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
             Spacer(minLength: 0)
-            MiniTrendLine(color: type.main, background: type.bg)
-                .frame(height: 30)
+            HStack(spacing: 6) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .foregroundColor(type.main)
+                Text(detail)
+                    .foregroundColor(.gTextSecondary)
+            }
+            .font(.system(size: 11, weight: .regular))
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
         }
-        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 122, alignment: .leading)
         .padding(16)
-        .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .seenCardElevation()
     }
 }
 
@@ -682,17 +698,17 @@ private struct ActivityActionTile: View {
     let action: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 7) {
                 Image(systemName: type.icon)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(type.main)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 32, height: 32)
                     .background(type.bg)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 Text(title)
                     .font(.gCaption)
-                    .foregroundColor(.gTextSecondary)
+                    .foregroundColor(.gTextBody)
                 Spacer()
                 Button(action: action) {
                     Image(systemName: done ? "checkmark" : "plus")
@@ -705,37 +721,33 @@ private struct ActivityActionTile: View {
                 .buttonStyle(.plain)
             }
             Text(value)
-                .font(.system(size: 25, weight: .semibold))
+                .font(.system(size: 27, weight: .semibold))
                 .foregroundColor(.gTextPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
-            Text(detail)
-                .font(.gCaption)
-                .foregroundColor(.gTextWeak)
             Spacer(minLength: 0)
-            HStack(spacing: 8) {
-                MiniTrendLine(color: type.main, background: type.bg)
-                    .frame(height: 30)
+            HStack(spacing: 6) {
+                Text(detail)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundColor(.gTextSecondary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
                 if let cancelTitle, let cancelAction {
                     Button(action: cancelAction) {
                         Text(cancelTitle)
-                            .font(.gCaption)
-                            .foregroundColor(.gTextSecondary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(Color.gBg)
-                            .clipShape(Capsule())
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(type.main)
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: 122, alignment: .leading)
         .padding(16)
-        .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .seenCardElevation()
     }
 }
 
@@ -769,9 +781,9 @@ private struct MealCheckButton: View {
                 Spacer()
             }
             .padding(14)
-            .background(Color.gSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: Color.gTextPrimary.opacity(done ? 0.055 : 0.04), radius: 11, x: 0, y: 5)
+            .background(SeenCardSurface())
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .seenCardElevation()
         }
         .buttonStyle(.plain)
     }
@@ -814,9 +826,9 @@ private struct SmallCheckTile: View {
             }
             .frame(maxWidth: .infinity, minHeight: 126, alignment: .leading)
             .padding(15)
-            .background(Color.gSurface)
+            .background(SeenCardSurface())
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .shadow(color: Color.gTextPrimary.opacity(0.055), radius: 12, x: 0, y: 5)
+            .seenCardElevation()
         }
         .buttonStyle(.plain)
     }
@@ -861,11 +873,11 @@ private struct ActivityRingMetricTile: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
         }
-        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 122, alignment: .leading)
         .padding(16)
-        .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 13, x: 0, y: 6)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .seenCardElevation()
     }
 }
 
@@ -890,13 +902,14 @@ private struct ActivityRings: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color(red: 0x1F/255, green: 0x20/255, blue: 0x24/255))
-                .shadow(color: Color.black.opacity(0.16), radius: 5, x: 0, y: 2)
-            Ring(progress: progress(kcal, goal: 300), color: .dEnergy, lineWidth: 9, inset: 0)
-            Ring(progress: progress(exerciseMinutes, goal: 30), color: .dMove, lineWidth: 9, inset: 13)
-            Ring(progress: progress(standHours, goal: 8), color: .dSleep, lineWidth: 9, inset: 26)
+                .fill(Color.gBg)
+                .overlay(Circle().stroke(Color.gHairline, lineWidth: 1))
+            // 线宽与半径差要一起控制：每层留出 4.5pt 空隙，三个数据不会粘成一团。
+            Ring(progress: progress(kcal, goal: 300), color: .dEnergy, lineWidth: 5.5, inset: 0)
+            Ring(progress: progress(exerciseMinutes, goal: 30), color: .dMove, lineWidth: 5.5, inset: 10)
+            Ring(progress: progress(standHours, goal: 8), color: .dSleep, lineWidth: 5.5, inset: 20)
         }
-        .padding(7)
+        .padding(4)
     }
 
     private func progress(_ value: Double?, goal: Double) -> Double {
@@ -915,13 +928,12 @@ private struct Ring: View {
         ZStack {
             Circle()
                 .inset(by: inset)
-                .stroke(Color.white.opacity(0.13), lineWidth: lineWidth)
+                .stroke(Color.gHairline, lineWidth: lineWidth)
             Circle()
                 .inset(by: inset)
                 .trim(from: 0, to: progress)
                 .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
                 .rotationEffect(.degrees(-90))
-                .shadow(color: color.opacity(0.32), radius: 2.5, x: 0, y: 1)
         }
     }
 }
@@ -1049,9 +1061,9 @@ private struct QuickNoteInput: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .shadow(color: Color.gTextPrimary.opacity(0.035), radius: 8, x: 0, y: 3)
+        .seenCardElevation()
     }
 
     private var canSubmit: Bool {

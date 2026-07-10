@@ -28,7 +28,7 @@ struct MoreView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.gBg.ignoresSafeArea()
+                SeenBackground()
                 ScrollView {
                     VStack(spacing: 16) {
                         profileHeader
@@ -193,8 +193,12 @@ private struct Row: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: icon).font(.system(size: 16)).foregroundColor(color)
-                .frame(width: 24)
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(color)
+                .frame(width: 30, height: 30)
+                .background(color.opacity(0.13))
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             Text(title).font(.gBody).foregroundColor(.gTextPrimary)
             Spacer()
             if let t = trailing {
@@ -203,7 +207,7 @@ private struct Row: View {
             Image(systemName: "chevron.right").font(.system(size: 12)).foregroundColor(.gTextSecondary)
         }
         .padding(.horizontal, 16).padding(.vertical, 14)
-        .overlay(Divider().frame(maxHeight: 0.5).padding(.leading, 48), alignment: .bottom)
+        .overlay(Divider().frame(maxHeight: 0.5).padding(.leading, 58), alignment: .bottom)
     }
 }
 
@@ -297,10 +301,9 @@ struct InspirationListView: View {
             Spacer()
         }
         .padding(18)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
+        .seenCardElevation()
     }
 
     private var inputCard: some View {
@@ -354,10 +357,9 @@ struct InspirationListView: View {
             }
         }
         .padding(16)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.06), radius: 12, x: 0, y: 5)
+        .seenCardElevation()
     }
 
     private func sectionHeader(_ title: String, count: Int) -> some View {
@@ -437,13 +439,12 @@ private struct InspirationRow: View {
             Spacer()
         }
         .padding(15)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18)
                 .stroke(item.category.color.main.opacity(0.16), lineWidth: 1)
         )
-        .shadow(color: Color.gTextPrimary.opacity(0.035), radius: 8, x: 0, y: 3)
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { onDelete() } label: { Label("删除", systemImage: "trash") }
         }

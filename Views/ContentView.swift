@@ -5,25 +5,6 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @EnvironmentObject private var messageStore: MessageStore
 
-    init() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor(Color.gSurface)
-        appearance.shadowColor = UIColor(Color.gHairline)
-        let item = UITabBarItemAppearance()
-        item.normal.iconColor = UIColor(Color.gTextSecondary)
-        item.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.gTextSecondary)]
-        item.selected.iconColor = UIColor(Color.dAi)
-        item.selected.titleTextAttributes = [.foregroundColor: UIColor(Color.dAi)]
-        appearance.stackedLayoutAppearance = item
-        appearance.inlineLayoutAppearance = item
-        appearance.compactInlineLayoutAppearance = item
-        appearance.selectionIndicatorTintColor = UIColor(Color.dAiBg)
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
-        UITabBar.appearance().unselectedItemTintColor = UIColor(Color.gTextSecondary)
-    }
-
     var body: some View {
         TabView(selection: $selectedTab) {
             TodayView()

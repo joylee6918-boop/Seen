@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AEF1000B2FC50001003E60B3 /* SeenWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AEF100012FC50001003E60B3 /* SeenWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AE62B84B2FC1C846003E60B3 /* HealthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE62B83C2FC1C846003E60B3 /* HealthManager.swift */; };
 		AE62B84C2FC1C846003E60B3 /* ShiguangApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE62B8432FC1C846003E60B3 /* ShiguangApp.swift */; };
 		AE62B84D2FC1C846003E60B3 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE62B8442FC1C846003E60B3 /* CalendarView.swift */; };
@@ -27,6 +28,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		AEF1000C2FC50001003E60B3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AE62B8082FC1C7B4003E60B3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AEF100032FC50001003E60B3;
+			remoteInfo = SeenWidget;
+		};
 		AE62B8202FC1C7B6003E60B3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = AE62B8082FC1C7B4003E60B3 /* Project object */;
@@ -43,7 +51,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		AEF1000A2FC50001003E60B3 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AEF1000B2FC50001003E60B3 /* SeenWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		AEF100012FC50001003E60B3 /* SeenWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SeenWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE62B8102FC1C7B4003E60B3 /* '拾光'.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "'拾光'.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE62B81F2FC1C7B6003E60B3 /* '拾光'Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "'拾光'Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE62B8292FC1C7B6003E60B3 /* '拾光'UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "'拾光'UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,7 +89,25 @@
 		AEE030042FC40C01003E60B3 /* BodyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AEF1000E2FC50001003E60B3 /* Exceptions for "SeenWidget" folder in "SeenWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AEF100032FC50001003E60B3 /* SeenWidget */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		AEF100022FC50001003E60B3 /* SeenWidget */ = {
+			exceptions = (
+				AEF1000E2FC50001003E60B3 /* Exceptions for "SeenWidget" folder in "SeenWidget" target */,
+			);
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SeenWidget;
+			sourceTree = "<group>";
+		};
 		AE62B8122FC1C7B4003E60B3 /* '拾光' */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "'拾光'";
@@ -85,6 +126,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AEF100052FC50001003E60B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AE62B80D2FC1C7B4003E60B3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -112,6 +160,7 @@
 		AE62B8072FC1C7B4003E60B3 = {
 			isa = PBXGroup;
 			children = (
+				AEF100022FC50001003E60B3 /* SeenWidget */,
 				AE62B8122FC1C7B4003E60B3 /* '拾光' */,
 				AE62B8222FC1C7B6003E60B3 /* '拾光'Tests */,
 				AE62B82C2FC1C7B6003E60B3 /* '拾光'UITests */,
@@ -126,6 +175,7 @@
 		AE62B8112FC1C7B4003E60B3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				AEF100012FC50001003E60B3 /* SeenWidget.appex */,
 				AE62B8102FC1C7B4003E60B3 /* '拾光'.app */,
 				AE62B81F2FC1C7B6003E60B3 /* '拾光'Tests.xctest */,
 				AE62B8292FC1C7B6003E60B3 /* '拾光'UITests.xctest */,
@@ -180,10 +230,12 @@
 				AE62B80C2FC1C7B4003E60B3 /* Sources */,
 				AE62B80D2FC1C7B4003E60B3 /* Frameworks */,
 				AE62B80E2FC1C7B4003E60B3 /* Resources */,
+				AEF1000A2FC50001003E60B3 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AEF1000D2FC50001003E60B3 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AE62B8122FC1C7B4003E60B3 /* '拾光' */,
@@ -194,6 +246,28 @@
 			productName = "'拾光'";
 			productReference = AE62B8102FC1C7B4003E60B3 /* '拾光'.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AEF100032FC50001003E60B3 /* SeenWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AEF100072FC50001003E60B3 /* Build configuration list for PBXNativeTarget "SeenWidget" */;
+			buildPhases = (
+				AEF100042FC50001003E60B3 /* Sources */,
+				AEF100052FC50001003E60B3 /* Frameworks */,
+				AEF100062FC50001003E60B3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AEF100022FC50001003E60B3 /* SeenWidget */,
+			);
+			name = SeenWidget;
+			packageProductDependencies = (
+			);
+			productName = SeenWidget;
+			productReference = AEF100012FC50001003E60B3 /* SeenWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		AE62B81E2FC1C7B6003E60B3 /* '拾光'Tests */ = {
 			isa = PBXNativeTarget;
@@ -251,6 +325,9 @@
 				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					AEF100032FC50001003E60B3 = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					AE62B80F2FC1C7B4003E60B3 = {
 						CreatedOnToolsVersion = 26.5;
 					};
@@ -279,6 +356,7 @@
 			projectRoot = "";
 			targets = (
 				AE62B80F2FC1C7B4003E60B3 /* '拾光' */,
+				AEF100032FC50001003E60B3 /* SeenWidget */,
 				AE62B81E2FC1C7B6003E60B3 /* '拾光'Tests */,
 				AE62B8282FC1C7B6003E60B3 /* '拾光'UITests */,
 			);
@@ -286,6 +364,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		AEF100062FC50001003E60B3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AE62B80E2FC1C7B4003E60B3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -310,6 +395,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		AEF100042FC50001003E60B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AE62B80C2FC1C7B4003E60B3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -351,6 +443,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		AEF1000D2FC50001003E60B3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AEF100032FC50001003E60B3 /* SeenWidget */;
+			targetProxy = AEF1000C2FC50001003E60B3 /* PBXContainerItemProxy */;
+		};
 		AE62B8212FC1C7B6003E60B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = AE62B80F2FC1C7B4003E60B3 /* '拾光' */;
@@ -364,6 +461,64 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		AEF100082FC50001003E60B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = SeenWidget/SeenWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QA429K3656;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SeenWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "YL.----.SeenWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AEF100092FC50001003E60B3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = SeenWidget/SeenWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QA429K3656;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SeenWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "YL.----.SeenWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		AE62B8312FC1C7B6003E60B3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -648,6 +803,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		AEF100072FC50001003E60B3 /* Build configuration list for PBXNativeTarget "SeenWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AEF100082FC50001003E60B3 /* Debug */,
+				AEF100092FC50001003E60B3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AE62B80B2FC1C7B4003E60B3 /* Build configuration list for PBXProject "'拾光'" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

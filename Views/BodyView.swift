@@ -9,7 +9,7 @@ struct BodyView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.gBg.ignoresSafeArea()
+                SeenBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         headerCard
@@ -62,39 +62,39 @@ struct BodyView: View {
             }
             BodyMetricRow(type: .oxygen,
                           title: "血氧",
-                          value: snapshot.bloodOxygen.map { "\(Int(($0 * 100).rounded()))" } ?? "--",
+                          value: snapshot.bloodOxygen.map { "\(Int(($0 * 100).rounded()))" } ?? "—",
                           unit: "%",
                           status: snapshot.bloodOxygen == nil ? "无数据" : "正常",
                           comparison: "HealthKit 今日平均",
                           dateText: "今天")
             BodyMetricRow(type: .temperature,
                           title: "手腕温度",
-                          value: snapshot.wristTemperature.map { String(format: "%.1f", $0) } ?? "--",
+                          value: snapshot.wristTemperature.map { String(format: "%.1f", $0) } ?? "—",
                           unit: "℃",
                           status: snapshot.wristTemperature == nil ? "无数据" : "已记录",
                           comparison: "最近 30 天最新睡眠样本",
                           dateText: "最近")
             BodyMetricRow(type: .vo2,
                           title: "最大摄氧量",
-                          value: snapshot.vo2Max.map { String(format: "%.1f", $0) } ?? "--",
+                          value: snapshot.vo2Max.map { String(format: "%.1f", $0) } ?? "—",
                           unit: "mL/kg/min",
                           status: snapshot.vo2Max == nil ? "无数据" : "已记录",
                           comparison: "最近一年最新样本",
                           dateText: "最近")
             BodyMetricRow(type: .sleepHeart,
                           title: "睡眠时心率",
-                          value: snapshot.sleepHeartRate.map { "\(Int($0.rounded()))" } ?? "--",
+                          value: snapshot.sleepHeartRate.map { "\(Int($0.rounded()))" } ?? "—",
                           unit: "bpm",
                           status: snapshot.sleepHeartRate == nil ? "无数据" : "正常",
                           comparison: snapshot.sleepHeartRate == nil ? "昨晚手表没记到你睡觉" : "昨晚睡眠区间平均",
                           dateText: "昨晚")
             BodyMetricRow(type: .hrv,
                           title: "HRV",
-                          value: snapshot.hrv.map { "\(Int($0))" } ?? "--",
+                          value: snapshot.hrv.map { "\(Int($0))" } ?? "—",
                           unit: "ms",
                           status: snapshot.hrv.map(hrvLabel) ?? "无数据",
-                          comparison: "今日恢复参考",
-                          dateText: "今天")
+                          comparison: "HealthKit 最近一次记录",
+                          dateText: "最近")
         }
     }
 
@@ -192,9 +192,9 @@ private struct BodyMetricTile: View {
         }
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
         .padding(13)
-        .background(Color.gSurface)
+        .background(SeenCardSurface())
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
+        .seenCardElevation()
     }
 }
 
@@ -255,44 +255,54 @@ private struct BodyMetricRow: View {
                         .minimumScaleFactor(0.8)
                 }
                 Spacer()
-                MiniTrend(color: type.main, background: type.bg)
-                    .frame(width: 132, height: 44)
+                MiniTrend(color: type.main, background: type.bg, hasData: value != "—")
+                    .frame(width: 118, height: 40)
             }
         }
-        .padding(18)
-        .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.gHairline, lineWidth: 1))
-        .shadow(color: Color.gTextPrimary.opacity(0.04), radius: 12, x: 0, y: 5)
+        .padding(20)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .seenCardElevation()
     }
 }
 
 private struct MiniTrend: View {
     let color: Color
     let background: Color
+    let hasData: Bool
 
     var body: some View {
         GeometryReader { geo in
-            let points: [CGFloat] = [0.35, 0.42, 0.32, 0.50, 0.44, 0.48, 0.40]
-            let step = geo.size.width / CGFloat(points.count - 1)
+            let points: [CGFloat] = [0.42, 0.48, 0.38, 0.52, 0.45, 0.49, 0.40]
+            let inset: CGFloat = 7
+            let step = (geo.size.width - inset * 2) / CGFloat(points.count - 1)
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(background.opacity(0.55))
-                Path { path in
-                    for index in points.indices {
-                        let x = CGFloat(index) * step
-                        let y = geo.size.height * points[index]
-                        if index == 0 { path.move(to: CGPoint(x: x, y: y)) }
-                        else { path.addLine(to: CGPoint(x: x, y: y)) }
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(background.opacity(hasData ? 0.20 : 0.12))
+                if hasData {
+                    Path { path in
+                        for index in points.indices {
+                            let x = inset + CGFloat(index) * step
+                            let y = geo.size.height * points[index]
+                            if index == 0 { path.move(to: CGPoint(x: x, y: y)) }
+                            else { path.addLine(to: CGPoint(x: x, y: y)) }
+                        }
                     }
-                }
-                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-                ForEach(points.indices, id: \.self) { index in
-                    Circle()
-                        .fill(index == points.indices.last ? color : Color.gSurface)
-                        .overlay(Circle().stroke(color, lineWidth: 3))
-                        .frame(width: 12, height: 12)
-                        .position(x: CGFloat(index) * step, y: geo.size.height * points[index])
+                    .stroke(color.opacity(0.85), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                    ForEach(points.indices, id: \.self) { index in
+                        Circle()
+                            .fill(index == points.indices.last ? color : Color.gSurface)
+                            .overlay(Circle().stroke(color, lineWidth: 2))
+                            .frame(width: index == points.indices.last ? 9 : 7, height: index == points.indices.last ? 9 : 7)
+                            .position(x: inset + CGFloat(index) * step, y: geo.size.height * points[index])
+                    }
+                } else {
+                    HStack(spacing: 4) {
+                        Circle().fill(color.opacity(0.8)).frame(width: 7, height: 7)
+                        Text("暂无趋势")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.gTextSecondary)
+                    }
                 }
             }
         }

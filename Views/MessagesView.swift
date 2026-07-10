@@ -7,7 +7,7 @@ struct MessagesView: View {
 
     var body: some View {
         ZStack {
-            Color.gBg.ignoresSafeArea()
+            SeenBackground()
             if messageStore.history.isEmpty && !loading {
                 EmptyState()
             } else {

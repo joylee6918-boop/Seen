@@ -18,7 +18,7 @@ struct TrendView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.gBg.ignoresSafeArea()
+                SeenBackground()
                 ScrollView {
                     VStack(spacing: 16) {
                         rangePicker

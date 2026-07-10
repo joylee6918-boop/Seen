@@ -21,7 +21,7 @@ struct AIView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.gBg.ignoresSafeArea()
+                SeenBackground()
                 ScrollView {
                     VStack(spacing: 16) {
                         tonightNoteCard
@@ -33,7 +33,7 @@ struct AIView: View {
                 }
             }
             .navigationTitle("关心")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .task { await load() }
             .refreshable { await load() }
         }
@@ -62,7 +62,7 @@ struct AIView: View {
                 if loading { ProgressView() }
             }
             Text("今晚先别硬撑")
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: 22, weight: .semibold))
                 .foregroundColor(.gTextPrimary)
             Text(noteReason)
                 .font(.system(size: 15, weight: .regular))
@@ -82,9 +82,9 @@ struct AIView: View {
             }
         }
         .padding(18)
-        .background(Color.gSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.gTextPrimary.opacity(0.08), radius: 16, x: 0, y: 7)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .seenCardElevation()
     }
 
     private var repliesSection: some View {
@@ -168,9 +168,9 @@ struct AIView: View {
                         .foregroundColor(.gTextBody)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(14)
-                        .background(Color.gSurface)
+                        .background(SeenCardSurface())
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gHairline, lineWidth: 1))
+                        .seenCardElevation()
                 } else {
                     ForEach(messages) { msg in
                         ReplyCard(msg: msg, archiveTitle: archiveTitle, archiveAction: archiveAction)
@@ -199,10 +199,7 @@ struct AIView: View {
                         Text(triggerLabel)
                             .font(.gCaption)
                             .foregroundColor(.gTextBody)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(Color.gBg)
-                            .clipShape(Capsule())
+                    .lineLimit(1)
                         Spacer(minLength: 8)
                         Text(formatTime(msg.createdAt))
                             .font(.gCaption)
@@ -215,10 +212,6 @@ struct AIView: View {
                             Text(archiveTitle)
                                 .font(.gCaption)
                                 .foregroundColor(.gTextSecondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.gBg)
-                                .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
                     }
@@ -226,10 +219,6 @@ struct AIView: View {
                         Text(msg.readAt == nil ? "未读" : "已读")
                             .font(.gCaption)
                             .foregroundColor(msg.readAt == nil ? .gTextBody : .gSuccess)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(msg.readAt == nil ? Color.gBg : Color.dMoveBg.opacity(0.8))
-                            .clipShape(Capsule())
                         if let readAt = msg.readAt {
                             Text("你在 \(formatTime(readAt)) 看过")
                                 .font(.gCaption)
@@ -262,10 +251,11 @@ struct AIView: View {
                     }
                 }
             }
-            .padding(16)
-            .background(Color.gSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: Color.gTextPrimary.opacity(0.05), radius: 10, x: 0, y: 4)
+            .padding(.vertical, 14)
+            .padding(.horizontal, 4)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.gHairline)
+            }
         }
 
         private var shouldCollapse: Bool {
