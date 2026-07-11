@@ -17,6 +17,7 @@ final class CheckIn {
         case meal    = "meal"      // 吃饭
         case goodnight = "goodnight" // 晚安
         case period  = "period"    // 经期 — 手动记, 每天点一下
+        case scent   = "scent"     // 气味观察 — 可一天多条
         case note    = "note"      // 自由输入
 
         var label: String {
@@ -26,6 +27,7 @@ final class CheckIn {
             case .meal:      return "吃饭"
             case .goodnight: return "晚安"
             case .period:    return "经期"
+            case .scent:     return "气味"
             case .note:      return "此刻"
             }
         }
@@ -36,6 +38,7 @@ final class CheckIn {
             case .meal:      return "fork.knife"
             case .goodnight: return "moon.zzz"
             case .period:    return "drop.fill"
+            case .scent:     return "wind"
             case .note:      return "text.bubble"
             }
         }
@@ -47,6 +50,7 @@ final class CheckIn {
             case .coffee:    return nil
             case .goodnight: return nil
             case .period:    return nil
+            case .scent:     return nil
             case .note:      return nil
             }
         }

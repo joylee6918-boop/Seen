@@ -189,7 +189,7 @@ struct SeenTodayWidget: Widget {
         }
         .configurationDisplayName("Seen 今日状态")
         .description("看一眼今天的提醒、睡眠、HRV 和静息心率。")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall])
     }
 }
 

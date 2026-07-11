@@ -64,27 +64,26 @@ class HealthManager: ObservableObject {
                 let watch = self.trustedSleepSamples(from: s)
                 guard !watch.isEmpty else { cont.resume(returning: nil); return }
                 let toUse = watch
-                // 取 asleep 样本 (有细分用细分, 没有回退 unspecified)
+                // 分期数据和 asleepUnspecified 可能覆盖同一晚的不同片段。两者都
+                // 保留，随后按时间做并集：这样不会重复计算重叠区间，也不会漏掉
+                // 醒来后再次入睡、但没有生成分期数据的片段。
                 let detailed: Set<Int> = [
                     HKCategoryValueSleepAnalysis.asleepCore.rawValue,
                     HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
                     HKCategoryValueSleepAnalysis.asleepREM.rawValue,
                 ]
-                let detailedSamples = toUse.filter { detailed.contains($0.value) }
-                let asleep: [HKCategorySample]
-                if detailedSamples.isEmpty {
-                    asleep = toUse.filter { $0.value == HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue }
-                } else {
-                    asleep = detailedSamples
+                let asleep = toUse.filter {
+                    detailed.contains($0.value) ||
+                    $0.value == HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue
                 }
                 guard !asleep.isEmpty else { cont.resume(returning: nil); return }
-                // 找最近一个睡眠段: 取最晚的 asleep 起点往前, 把所有与它时间相连 (gap < 1h) 的段并成一个连续 session
+                // 夜里醒来后又睡不应被当作新的独立午睡；4 小时以内的间隔仍归为
+                // 同一晚。总时长只累计实际 asleep 区间，不把清醒间隔算进去。
                 let sorted = asleep.sorted { $0.startDate < $1.startDate }
                 let lastStart = sorted.last!.startDate
-                // 往前聚合所有 gap < 60min 的段 (一次起夜/短暂清醒不切断)
                 var session: [(start: Date, end: Date)] = []
                 for sample in sorted {
-                    if let prev = session.last, sample.startDate.timeIntervalSince(prev.end) < 3600 {
+                    if let prev = session.last, sample.startDate.timeIntervalSince(prev.end) < 4 * 3600 {
                         session[session.count - 1].end = max(prev.end, sample.endDate)
                     } else {
                         session.append((sample.startDate, sample.endDate))
@@ -94,10 +93,19 @@ class HealthManager: ObservableObject {
                 guard let lastNight = session.last(where: { $0.start <= lastStart && $0.end >= lastStart }) ?? session.last else {
                     cont.resume(returning: nil); return
                 }
-                // 时长 = 落在这一夜区间内的 asleep 样本时长求和, 不含中间的清醒段.
-                // (session.start/end 只是 asleep 样本的包围盒, 中间 <1h 的 awake 段不该算进睡眠.)
-                let nightAsleep = asleep.filter { $0.startDate >= lastNight.start && $0.endDate <= lastNight.end }
-                let totalSec = nightAsleep.reduce(0.0) { $0 + $1.endDate.timeIntervalSince($1.startDate) }
+                let nightAsleep = asleep
+                    .filter { $0.startDate >= lastNight.start && $0.endDate <= lastNight.end }
+                    .map { (start: $0.startDate, end: $0.endDate) }
+                    .sorted { $0.start < $1.start }
+                var merged: [(start: Date, end: Date)] = []
+                for interval in nightAsleep {
+                    if let previous = merged.last, interval.start <= previous.end {
+                        merged[merged.count - 1].end = max(previous.end, interval.end)
+                    } else {
+                        merged.append(interval)
+                    }
+                }
+                let totalSec = merged.reduce(0.0) { $0 + $1.end.timeIntervalSince($1.start) }
                 let hours = totalSec / 3600.0
                 cont.resume(returning: hours > 0 ? hours : nil)
             }
@@ -130,7 +138,7 @@ class HealthManager: ObservableObject {
                 let lastStart = sortedAsleep.last!.startDate
                 var sess: [(Date, Date)] = []
                 for sm in sortedAsleep {
-                    if let p = sess.last, sm.startDate.timeIntervalSince(p.1) < 3600 {
+                    if let p = sess.last, sm.startDate.timeIntervalSince(p.1) < 4 * 3600 {
                         sess[sess.count - 1] = (p.0, max(p.1, sm.endDate))
                     } else { sess.append((sm.startDate, sm.endDate)) }
                 }
@@ -223,10 +231,11 @@ class HealthManager: ObservableObject {
 
     func fetchSleepScoreBreakdown() async -> SleepScoreBreakdown? {
         let nights = await fetchRecentNights(14)
-        guard let last = nights.last, last.asleepHours > 0 else { return nil }
+        guard let last = nights.last else { return nil }
+        let h = (try? await fetchLastNightSleep()) ?? last.asleepHours
+        guard h > 0 else { return nil }
 
         // 1) 时长分 (50) — 分段线性, 贴 Apple 的曲线
-        let h = last.asleepHours
         let dur: Double
         switch h {
         case 7...:        dur = 50

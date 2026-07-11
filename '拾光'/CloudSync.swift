@@ -1,6 +1,21 @@
 import Foundation
 import SwiftData
 
+struct ScreenTimeAppUsage: Identifiable, Equatable {
+    let name: String
+    let seconds: TimeInterval
+
+    var id: String { name }
+}
+
+struct ScreenTimeSummary: Equatable {
+    let totalSeconds: TimeInterval
+    let apps: [ScreenTimeAppUsage]
+    let eventCount: Int
+
+    static let empty = ScreenTimeSummary(totalSeconds: 0, apps: [], eventCount: 0)
+}
+
 class CloudSync {
     static let shared = CloudSync()
     static let uploadsEnabledKey = "cloudUploadsEnabled"
@@ -9,6 +24,14 @@ class CloudSync {
 
     static var isConfigured: Bool {
         loadConfig() != nil
+    }
+
+    static var shortcutRecordsURL: String? {
+        loadConfig().map { "\($0.baseURL)/records" }
+    }
+
+    static var shortcutAuthorization: String? {
+        loadConfig().map { "Bearer \($0.token)" }
     }
 
     private var uploadsEnabled: Bool {
@@ -135,6 +158,70 @@ class CloudSync {
         return SyncResult.parse(resp)
     }
 
+    // MARK: - 屏幕时间 /records
+    // 快捷指令以 type=screen 写入 app 打开/离开事件；服务端按日期返回记录，
+    // 客户端负责配对并计算实际前台时长。
+    func fetchScreenTime(for date: Date = .now) async throws -> ScreenTimeSummary {
+        let day = ISO8601DateFormatter().string(from: date).prefix(10)
+        let data = try await request("/records?type=screen&since=\(day)&limit=200", method: "GET")
+        return Self.screenTimeSummary(from: data)
+    }
+
+    private static func screenTimeSummary(from data: Data) -> ScreenTimeSummary {
+        guard let object = try? JSONSerialization.jsonObject(with: data) else { return .empty }
+        let records: [[String: Any]]
+        if let dictionary = object as? [String: Any] {
+            records = (dictionary["records"] as? [[String: Any]]) ??
+                (dictionary["items"] as? [[String: Any]]) ?? []
+        } else {
+            records = object as? [[String: Any]] ?? []
+        }
+
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        func date(from value: Any?) -> Date? {
+            guard let text = value as? String else { return nil }
+            return iso.date(from: text) ?? ISO8601DateFormatter().date(from: text)
+        }
+        func text(_ value: Any?) -> String? {
+            (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        let ordered = records.compactMap { record -> (app: String, action: String, date: Date)? in
+            guard (text(record["type"]) ?? "screen") == "screen" else { return nil }
+            let value = record["value"] as? [String: Any] ?? [:]
+            guard let app = text(value["app"]) ?? text(value["name"]) ?? text(record["app"]) ?? text(record["value"]),
+                  let action = text(value["action"]) ?? text(value["eventAction"]) ?? text(record["action"]) ?? text(record["note"]),
+                  let timestamp = date(from: record["ts"]) else { return nil }
+            return (app, action.lowercased(), timestamp)
+        }
+        .sorted { $0.date < $1.date }
+
+        var openedAt: [String: Date] = [:]
+        var durations: [String: TimeInterval] = [:]
+        let openActions: Set<String> = ["open", "opened", "start"]
+        let closeActions: Set<String> = ["close", "closed", "stop"]
+        for event in ordered {
+            if openActions.contains(event.action) {
+                openedAt[event.app] = event.date
+            } else if closeActions.contains(event.action), let opened = openedAt.removeValue(forKey: event.app) {
+                let seconds = event.date.timeIntervalSince(opened)
+                // 防止漏掉 close 事件后，把一整天错误归到某个 App。
+                if seconds > 0, seconds <= 12 * 60 * 60 {
+                    durations[event.app, default: 0] += seconds
+                }
+            }
+        }
+
+        let apps = durations.map { ScreenTimeAppUsage(name: $0.key, seconds: $0.value) }
+            .sorted { $0.seconds > $1.seconds }
+        return ScreenTimeSummary(
+            totalSeconds: apps.reduce(0) { $0 + $1.seconds },
+            apps: apps,
+            eventCount: ordered.count
+        )
+    }
+
     // MARK: - /moods (按 date 幂等)
     @discardableResult
     func syncMood(_ mood: DailyMood, sleepStages: (deep: Double, core: Double, rem: Double, awake: Double)? = nil) async throws -> SyncResult {
@@ -178,6 +265,7 @@ class CloudSync {
         var dict: [String: Any] = [
             "id": w.id.uuidString,
             "ts": isoFmt.string(from: w.date),
+            "type": w.typeRaw,
             "isOvertime": w.isOvertime,
             "source": w.sourceRaw,
             "exercises": w.exercises.map { e in

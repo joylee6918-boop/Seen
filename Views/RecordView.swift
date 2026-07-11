@@ -232,8 +232,8 @@ struct RecordView: View {
     // MARK: - 气味
     private var scentSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(type: .mood, title: "今天有什么气味？")
-            TextField("今天自己闻起来是什么感觉？", text: $bodyScent, axis: .vertical)
+            SectionHeader(type: .mood, title: "记一条气味")
+            TextField("此刻自己闻起来是什么感觉？", text: $bodyScent, axis: .vertical)
                 .font(.gBody).lineLimit(1...3)
                 .padding(10).background(Color.gBg).clipShape(RoundedRectangle(cornerRadius: 10))
         }
@@ -625,7 +625,8 @@ struct RecordView: View {
         if let h = Double(sleepHoursText) { mood.sleepHours = h }
         mood.sleepQuality = Int(sleepQualities.firstIndex(of: sleepQuality).map { $0 + 1 } ?? 2)
         if let v = Double(hrvText) { mood.hrv = v }
-        mood.bodyScent = bodyScent.isEmpty ? nil : bodyScent
+        // 气味是瞬时观察，作为独立打卡保存；一天可以有多条，不能覆盖 DailyMood。
+        let scentText = bodyScent.trimmingCharacters(in: .whitespacesAndNewlines)
         mood.tags = tags
         mood.note = noteText.isEmpty ? nil : noteText
 
@@ -635,29 +636,46 @@ struct RecordView: View {
             mood.photo = data
         }
 
-        // 运动
-        if let m = Int(workoutMinutesText), m > 0 {
-            let w: WorkoutSession
-            if let existing = workouts.first(where: {
-                $0.source == .manual && Calendar.current.isDate($0.date, inSameDayAs: today)
-            }) {
-                w = existing
-            } else {
-                w = WorkoutSession(date: today, type: workoutType, source: .manual)
-                modelContext.insert(w)
-            }
-            w.date = today
-            w.type = workoutType
-            w.durationMinutes = m
+        // 运动：动作/组数本身就是一条有效训练，不应因为没填时长而整段丢失。
+        let hasWorkoutContent = (Int(workoutMinutesText) ?? 0) > 0 || !exercises.isEmpty || !workoutNote.isEmpty
+        if hasWorkoutContent {
+            // 每次保存都是一条独立训练；同一天的多次训练不再互相覆盖。
+            // Date() 保留设备的本地时刻，避免此前被写成当天 00:00。
+            let w = WorkoutSession(date: Date(), type: workoutType, source: .manual)
+            modelContext.insert(w)
+            w.durationMinutes = Int(workoutMinutesText).flatMap { $0 > 0 ? $0 : nil }
             w.recomputeOvertime()
             for i in exercises.indices { exercises[i].order = i }
             w.exercises = exercises
             w.note = workoutNote.isEmpty ? nil : workoutNote
+            // 先落本机，再异步上传；网络失败时训练仍然可见、可修改。
+            try? modelContext.save()
             Task {
-                if let r = try? await CloudSync.shared.syncWorkout(w) {
+                do {
+                    let r = try await CloudSync.shared.syncWorkout(w)
                     messageStore.apply(r)
+                } catch {
+                    savedTick = "训练已保存在本机，云端上传失败；稍后可在“我的 → 立即同步”重试。"
                 }
             }
+
+            // 训练已落库，清空训练区，便于继续记下一组/下一次训练。
+            workoutType = .strength
+            workoutMinutesText = ""
+            exercises = []
+            workoutNote = ""
+        }
+
+        if !scentText.isEmpty {
+            let scent = CheckIn(kind: .scent, value: scentText)
+            modelContext.insert(scent)
+            try? modelContext.save()
+            Task {
+                if let result = try? await CloudSync.shared.syncCheckIn(scent) {
+                    messageStore.apply(result)
+                }
+            }
+            bodyScent = ""
         }
 
         // 习惯
@@ -707,17 +725,11 @@ struct RecordView: View {
                 sleepQuality = sleepQualities[q - 1]
             }
             if let v = mood.hrv { hrvText = String(format: "%.0f", v) }
-            bodyScent = mood.bodyScent ?? ""
             tags = mood.tags
             noteText = mood.note ?? ""
             photoData = mood.photo
         }
-        if let workout = workouts.first(where: { $0.source == .manual && Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            workoutType = workout.type
-            if let minutes = workout.durationMinutes { workoutMinutesText = "\(minutes)" }
-            exercises = workout.exercises.sorted { $0.order < $1.order }
-            workoutNote = workout.note ?? ""
-        }
+        // 训练是独立记录，不再把今天上一条自动回填到空白录入表单。
         for h in habits { habitTicks[h.id] = h.isCompletedOn(today) }
     }
 

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 // 我的页 — 个人区 + 回顾/AI陪伴/数据与安全 分组
 struct MoreView: View {
@@ -82,6 +83,9 @@ struct MoreView: View {
             NavigationLink {
                 TrendView()
             } label: { Row(icon: "chart.xyaxis.line", color: .dSleep, title: "趋势统计") }
+            NavigationLink {
+                WorkoutHistoryView()
+            } label: { Row(icon: "dumbbell.fill", color: .dAi, title: "训练记录") }
             NavigationLink {
                 RecordView()
             } label: { Row(icon: "plus.circle", color: .dMood, title: "记录此刻") }
@@ -174,6 +178,131 @@ struct MoreView: View {
             return "上次 \(lastManualSyncAt.formatted(.dateTime.hour().minute()))"
         }
         return cloudUploadsEnabled ? "已开启" : "已关闭"
+    }
+}
+
+// MARK: - 训练记录
+private struct WorkoutHistoryView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \WorkoutSession.date, order: .reverse) private var workouts: [WorkoutSession]
+
+    var body: some View {
+        List {
+            if workouts.isEmpty {
+                ContentUnavailableView("还没有训练记录", systemImage: "dumbbell")
+            } else {
+                ForEach(workouts) { workout in
+                    NavigationLink {
+                        WorkoutEditorView(workout: workout)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack {
+                                Text("\(workout.type.emoji) \(workout.typeRaw)")
+                                    .font(.gBody.weight(.semibold))
+                                Spacer()
+                                Text(workout.date.formatted(.dateTime.year().month().day()))
+                                    .font(.gCaption)
+                                    .foregroundColor(.gTextSecondary)
+                            }
+                            Text(workoutSummary(workout))
+                                .font(.gCaption)
+                                .foregroundColor(.gTextSecondary)
+                                .lineLimit(2)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                .onDelete { offsets in
+                    for index in offsets {
+                        let workout = workouts[index]
+                        let id = workout.id
+                        modelContext.delete(workout)
+                        Task { try? await CloudSync.shared.deleteWorkout(id) }
+                    }
+                    try? modelContext.save()
+                }
+            }
+        }
+        .navigationTitle("训练记录")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func workoutSummary(_ workout: WorkoutSession) -> String {
+        let exercises = workout.exercises.map { "\($0.exerciseName) \($0.setCount)组" }.joined(separator: " · ")
+        if !exercises.isEmpty { return exercises }
+        if let minutes = workout.durationMinutes { return "\(minutes) 分钟" }
+        return workout.note ?? "训练已记录"
+    }
+}
+
+private struct WorkoutEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var messageStore: MessageStore
+    let workout: WorkoutSession
+
+    @State private var type: WorkoutSession.WorkoutType
+    @State private var minutes: String
+    @State private var note: String
+    @State private var exercises: [ExerciseEntry]
+
+    init(workout: WorkoutSession) {
+        self.workout = workout
+        _type = State(initialValue: workout.type)
+        _minutes = State(initialValue: workout.durationMinutes.map(String.init) ?? "")
+        _note = State(initialValue: workout.note ?? "")
+        _exercises = State(initialValue: workout.exercises.sorted { $0.order < $1.order })
+    }
+
+    var body: some View {
+        Form {
+            Section("训练") {
+                Picker("类型", selection: $type) {
+                    ForEach(WorkoutSession.WorkoutType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
+                TextField("时长（分钟，可留空）", text: $minutes)
+                    .keyboardType(.numberPad)
+                TextField("训练备注", text: $note, axis: .vertical)
+            }
+            Section("动作与组数") {
+                ForEach(exercises.indices, id: \.self) { index in
+                    VStack(alignment: .leading) {
+                        TextField("动作名称", text: $exercises[index].exerciseName)
+                        Stepper("\(exercises[index].setCount) 组", value: $exercises[index].setCount, in: 1...30)
+                        if let reps = exercises[index].reps { Text("\(reps) 次").font(.gCaption).foregroundColor(.gTextSecondary) }
+                        if let weight = exercises[index].weightKg { Text("\(weight, specifier: "%.1f") kg").font(.gCaption).foregroundColor(.gTextSecondary) }
+                    }
+                    .swipeActions {
+                        Button(role: .destructive) { exercises.remove(at: index) } label: { Label("删除", systemImage: "trash") }
+                    }
+                }
+                Button("添加动作", systemImage: "plus") {
+                    exercises.append(ExerciseEntry(exerciseName: "新动作", setCount: 1, order: exercises.count))
+                }
+            }
+        }
+        .navigationTitle("编辑训练")
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("保存") { save() }
+            }
+        }
+    }
+
+    private func save() {
+        workout.type = type
+        workout.durationMinutes = Int(minutes).flatMap { $0 > 0 ? $0 : nil }
+        workout.note = note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note
+        for index in exercises.indices { exercises[index].order = index }
+        workout.exercises = exercises
+        workout.recomputeOvertime()
+        try? modelContext.save()
+        Task {
+            if let result = try? await CloudSync.shared.syncWorkout(workout) {
+                messageStore.apply(result)
+            }
+        }
+        dismiss()
     }
 }
 
@@ -661,6 +790,30 @@ struct PrivacyView: View {
                             .padding(12)
                             .background(Color.gBg)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                        if CloudSync.isConfigured {
+                            Divider()
+                            Text("快捷指令配置")
+                                .font(.gCaption)
+                                .foregroundColor(.gTextSecondary)
+                            Button {
+                                UIPasteboard.general.string = CloudSync.shortcutRecordsURL
+                            } label: {
+                                Label("复制 /records 地址", systemImage: "link")
+                                    .font(.gBody)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            Button {
+                                UIPasteboard.general.string = CloudSync.shortcutAuthorization
+                            } label: {
+                                Label("复制快捷指令鉴权", systemImage: "key.fill")
+                                    .font(.gBody)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            Text("复制后直接粘贴到快捷指令；鉴权内容请勿分享。")
+                                .font(.gCaption)
+                                .foregroundColor(.gTextSecondary)
+                        }
                     }
                     .gleanCard()
 

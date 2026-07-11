@@ -14,6 +14,7 @@ struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var healthSnapshot: HealthSnapshot = .init()
+    @State private var screenTime: ScreenTimeSummary = .empty
     @State private var toast: ToastState? = nil
     @State private var refreshTimer: Timer? = nil
     @State private var showSleepDetail = false
@@ -31,6 +32,7 @@ struct TodayView: View {
                         header
                         tonightNote
                         healthDataOverview
+                        screenTimeOverview
                         mealCheckIn
                         recentlySeen
                         quickCheckIn
@@ -193,6 +195,52 @@ struct TodayView: View {
         }
     }
 
+    // MARK: - 手机使用（由快捷指令记录 App 打开/离开事件）
+    private var screenTimeOverview: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            GrowSectionHeader(
+                title: "手机使用",
+                trailing: screenTime.eventCount > 0 ? "今日" : "等待记录"
+            )
+            if screenTime.eventCount == 0 {
+                HStack(spacing: 10) {
+                    Image(systemName: "iphone")
+                        .foregroundColor(.dAi)
+                    Text("设置快捷指令后，这里会显示今天的使用时长。")
+                        .font(.gCaption)
+                        .foregroundColor(.gTextSecondary)
+                }
+            } else {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(formatScreenDuration(screenTime.totalSeconds))
+                        .font(.system(size: 30, weight: .semibold, design: .rounded))
+                        .foregroundColor(.gTextPrimary)
+                    Text("今日已记录")
+                        .font(.gCaption)
+                        .foregroundColor(.gTextSecondary)
+                    Spacer()
+                    Image(systemName: "hourglass")
+                        .foregroundColor(.dAi)
+                }
+                ForEach(screenTime.apps.prefix(3)) { app in
+                    HStack {
+                        Text(app.name)
+                            .font(.gBody)
+                            .foregroundColor(.gTextBody)
+                        Spacer()
+                        Text(formatScreenDuration(app.seconds))
+                            .font(.gBody.weight(.semibold))
+                            .foregroundColor(.gTextPrimary)
+                    }
+                }
+            }
+        }
+        .padding(18)
+        .background(SeenCardSurface())
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .seenCardElevation()
+    }
+
     // MARK: - 饮食打卡
     private var mealCheckIn: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -222,10 +270,10 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - 刚刚看见
+    // MARK: - 今天的记录
     private var recentlySeen: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("刚刚看见")
+            Text("今天的记录")
                 .font(.gH3)
                 .foregroundColor(.gTextPrimary)
                 .padding(.bottom, 8)
@@ -234,9 +282,9 @@ struct TodayView: View {
                         title: "今天还没有新的记录",
                         reply: "依安：等你想说的时候，我会在这里。")
             } else {
-                ForEach(Array(seenItems.prefix(2).enumerated()), id: \.element.id) { index, item in
+                ForEach(Array(seenItems.prefix(10).enumerated()), id: \.element.id) { index, item in
                     SeenRow(time: item.time, title: item.title, reply: item.reply)
-                    if index < min(seenItems.count, 2) - 1 {
+                    if index < min(seenItems.count, 10) - 1 {
                         Divider().background(Color.gHairline)
                     }
                 }
@@ -291,7 +339,8 @@ struct TodayView: View {
         validCheckIns
     }
     private var seenItems: [SeenItem] {
-        var items = recentCheckIns.map { c in
+        let today = calendar.startOfDay(for: Date())
+        var items = recentCheckIns.filter { calendar.isDate($0.ts, inSameDayAs: today) }.map { c in
             SeenItem(date: c.ts,
                      time: c.ts.formatted(.dateTime.hour().minute()),
                      title: seenTitle(c),
@@ -303,6 +352,19 @@ struct TodayView: View {
                                   title: "你说\(moodStateText(mood))",
                                   reply: "依安：看到了，今晚慢一点。"))
         }
+        items.append(contentsOf: workouts
+            .filter { calendar.isDate($0.date, inSameDayAs: today) }
+            .map { workout in
+                let exerciseText = workout.exercises.isEmpty
+                    ? (workout.durationMinutes.map { "\($0) 分钟" } ?? "训练已记录")
+                    : "\(workout.exercises.count) 个动作 · \(workout.exercises.reduce(0) { $0 + $1.setCount }) 组"
+                return SeenItem(
+                    date: workout.date,
+                    time: workout.date.formatted(.dateTime.hour().minute()),
+                    title: "\(workout.type.emoji) \(workout.typeRaw)：\(exerciseText)",
+                    reply: "依安：训练内容我记住了。"
+                )
+            })
         return items.sorted { $0.date > $1.date }
     }
     private var periodDay: Int? {
@@ -429,6 +491,7 @@ struct TodayView: View {
         healthSnapshot.floors = try? await healthManager.fetchTodayFlightsClimbed()
         healthSnapshot.bloodOxygen = try? await healthManager.fetchTodayBloodOxygen()
         healthSnapshot.lastUpdated = Date()
+        screenTime = (try? await CloudSync.shared.fetchScreenTime()) ?? .empty
         // HealthKit 全量数据推 VPS — Claude 读一条 health record 就能看到当天身体全貌
         Task {
             if let r = try? await CloudSync.shared.syncHealthSnapshot(
@@ -488,6 +551,11 @@ struct TodayView: View {
             hrv: healthSnapshot.hrv,
             restingHeartRate: healthSnapshot.heartRate
         ))
+    }
+
+    private func formatScreenDuration(_ seconds: TimeInterval) -> String {
+        let minutes = max(0, Int(seconds.rounded()) / 60)
+        return minutes >= 60 ? "\(minutes / 60)小时\(minutes % 60)分" : "\(minutes)分"
     }
 
     private func scheduleToastDismiss() {
@@ -584,6 +652,7 @@ struct TodayView: View {
             }
         case .back: return c.value == "累" ? "你说有点累" : "你说身体有点\(c.value)"
         case .period: return "你记录了经期"
+        case .scent: return "你闻起来：\(c.value)"
         case .note: return "你说：\(c.value)"
         }
     }
@@ -594,6 +663,7 @@ struct TodayView: View {
         case .back: return "看到了，今晚慢一点。"
         case .meal: return "记下啦，照顾自己这件事很重要。"
         case .period: return "我记着了，今天温柔一点。"
+        case .scent: return "这条气味观察，我帮你留着。"
         case .note: return "看到了，我帮你记着。"
         }
     }
