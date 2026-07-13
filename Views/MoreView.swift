@@ -56,7 +56,7 @@ struct MoreView: View {
         VStack(spacing: 8) {
             Image(systemName: "person.crop.circle.fill")
                 .font(.system(size: 56)).foregroundColor(.dAi)
-            Text("阿芸").font(.gH2)
+            Text("Username").font(.gH2)
             Text("你过日子，我看着你")
                 .font(.gCaption).foregroundColor(.gTextSecondary)
             HStack(spacing: 24) {

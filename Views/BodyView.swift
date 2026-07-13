@@ -126,7 +126,7 @@ struct BodyView: View {
         if snapshot.sleepHours == nil {
             return "Seen 不会用其它来源替你猜睡眠。没有 Apple Watch 样本时，睡眠会明确显示未戴表。"
         }
-        return "这些是当前从 HealthKit 读取到的数据，用来给依安解释你的状态。"
+        return "这些是当前从 HealthKit 读取到的数据，用来给 AIname 解释你的状态。"
     }
 
     private var sleepDetail: String {

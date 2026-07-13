@@ -63,7 +63,7 @@ private struct MessagePopup: View {
             VStack(spacing: 16) {
                 HStack(spacing: 8) {
                     DataIcon(type: .ai, size: 32)
-                    Text("依安给你留了话").font(.gH3)
+                    Text("AIname 给你留了话").font(.gH3)
                     Spacer()
                 }
                 Text(msg.text)

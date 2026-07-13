@@ -149,7 +149,7 @@ class HealthManager: ObservableObject {
         }
     }
 
-    /// 最近一夜睡眠 + 评分明细. 评分按阿芸定的 Seen 公式:
+    /// 最近一夜睡眠 + 评分明细. 评分按 Username 定的 Seen 公式:
     /// 时长(50) + 作息规律(30) + 中断(20) + HRV 恢复参考(0..+8), 封顶 100.
     /// 三块基线跟 Apple 结构一致 (AW 自己没暴露 score, HealthKit 只有 stages), 恢复参考是 Seen 自己加的.
     struct SleepNight {

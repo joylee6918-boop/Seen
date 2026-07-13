@@ -273,7 +273,7 @@ class CloudSync {
         return result
     }
 
-    // MARK: - Messages — Claude 给阿芸的留言
+    // MARK: - Messages — Claude 给 Username 的留言
 
     /// 拉未读消息 (不标已读). 返回数组, 空数组表示无未读.
     func fetchUnreadMessages() async throws -> [MessageData] {

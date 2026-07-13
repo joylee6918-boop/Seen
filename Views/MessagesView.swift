@@ -1,6 +1,6 @@
 import SwiftUI
 
-// 回信 — 依安给阿芸的全部回复历史
+// 回信 — AIname 给 Username 的全部回复历史
 struct MessagesView: View {
     @EnvironmentObject var messageStore: MessageStore
     @State private var loading = false
@@ -46,7 +46,7 @@ private struct MessageRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 DataIcon(type: .ai, size: 28)
-                Text("依安").font(.gH3)
+                Text("AIname").font(.gH3)
                 Spacer()
                 if msg.readAt == nil {
                     StatusPill(text: "未读", kind: .ai)

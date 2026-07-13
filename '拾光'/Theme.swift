@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 // MARK: - Seen 设计系统 · 中性系统底 + 单一品牌色 + 健康语义色
-// 黑白灰负责结构；干玫瑰只代表依安/选中；数据色只服务具体指标。
+// 黑白灰负责结构；干玫瑰只代表 AIname/选中；数据色只服务具体指标。
 
 extension Color {
     /// 根据系统的浅色/深色外观自动解析的颜色 token。

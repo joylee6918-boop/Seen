@@ -730,9 +730,9 @@ struct RecordView: View {
     }
     private func localCompanionReply(for mood: DailyMood) -> String {
         if mood.moodScore <= 4 || mood.tags.contains("疲惫") {
-            return "依安看到了，今晚我们慢一点。"
+            return "AIname 看到了，今晚我们慢一点。"
         }
-        return "依安看到了，今晚我们慢一点。"
+        return "AIname 看到了，今晚我们慢一点。"
     }
 }
 

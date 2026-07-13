@@ -90,7 +90,7 @@ struct TodayView: View {
                         .background(Color.dAiBg)
                         .clipShape(Circle())
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("依安看过了")
+                        Text("AIname 看过了")
                             .font(.gCaption)
                             .foregroundColor(.gTextBody)
                         Text("今晚先别硬撑")
@@ -232,7 +232,7 @@ struct TodayView: View {
             if seenItems.isEmpty {
                 SeenRow(time: Date().formatted(.dateTime.hour().minute()),
                         title: "今天还没有新的记录",
-                        reply: "依安：等你想说的时候，我会在这里。")
+                        reply: "AIname：等你想说的时候，我会在这里。")
             } else {
                 ForEach(Array(seenItems.prefix(2).enumerated()), id: \.element.id) { index, item in
                     SeenRow(time: item.time, title: item.title, reply: item.reply)
@@ -295,13 +295,13 @@ struct TodayView: View {
             SeenItem(date: c.ts,
                      time: c.ts.formatted(.dateTime.hour().minute()),
                      title: seenTitle(c),
-                     reply: "依安：\(shortReply(c))")
+                     reply: "AIname：\(shortReply(c))")
         }
         if let mood = todayMood {
             items.append(SeenItem(date: mood.date,
                                   time: mood.date.formatted(.dateTime.hour().minute()),
                                   title: "你说\(moodStateText(mood))",
-                                  reply: "依安：看到了，今晚慢一点。"))
+                                  reply: "AIname：看到了，今晚慢一点。"))
         }
         return items.sorted { $0.date > $1.date }
     }
@@ -505,14 +505,14 @@ struct TodayView: View {
     private var greeting: String {
         let hour = calendar.component(.hour, from: Date())
         switch hour {
-        case 5..<11:  return "早上好，阿芸"
-        case 11..<14: return "中午好，阿芸"
-        case 14..<18: return "下午好，阿芸"
-        default:      return "晚上好，阿芸"
+        case 5..<11:  return "早上好，Username"
+        case 11..<14: return "中午好，Username"
+        case 14..<18: return "下午好，Username"
+        default:      return "晚上好，Username"
         }
     }
     private var subGreeting: String {
-        "依安刚刚看过你的状态"
+        "AIname 刚刚看过你的状态"
     }
     private var widgetHeadline: String {
         if healthSnapshot.sleepHours == nil { return "昨晚没有睡眠数据" }
@@ -542,7 +542,7 @@ struct TodayView: View {
     private func moodLabel(_ s: Int) -> String { ["很糟糕","有点低","还好啦","不错","超级棒"][max(0, min(s-1, 4))] }
     private func sleepQualityLabel(_ h: Double) -> String { h < 5 ? "偏少" : (h < 7 ? "一般" : "良好") }
     private var sleepCardSub: String {
-        // 评分按阿芸定的 Seen 公式: 时长50 + 规律30 + 中断20 + HRV恢复参考(0..8), 封顶100.
+        // 评分按 Username 定的 Seen 公式: 时长50 + 规律30 + 中断20 + HRV恢复参考(0..8), 封顶100.
         if let b = healthSnapshot.sleepScoreBreakdown, let stages = healthSnapshot.sleepStages {
             return "评分\(b.total) · 深睡\(formatHours(stages.deep))"
         }
@@ -1046,7 +1046,7 @@ private struct QuickNoteInput: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            TextField("自己写一句给依安", text: $text)
+            TextField("自己写一句给 AIname", text: $text)
                 .font(.gBody)
                 .foregroundColor(.gTextPrimary)
                 .textInputAutocapitalization(.never)

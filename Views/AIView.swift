@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import HealthKit
 
-// 关心页 — 小纸条 + 依安回复历史
+// 关心页 — 小纸条 + AIname 回复历史
 struct AIView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \DailyMood.date, order: .reverse) private var moods: [DailyMood]
@@ -90,7 +90,7 @@ struct AIView: View {
     private var repliesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             ReplySection(
-                title: "依安给你的回声",
+                title: "AIname 给你的回声",
                 messages: activeReplyMessages,
                 emptyText: "这里还空着。你放下一点什么，我就接一点什么。",
                 archiveTitle: "归档",
